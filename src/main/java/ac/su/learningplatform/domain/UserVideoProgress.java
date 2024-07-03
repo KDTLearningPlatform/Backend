@@ -1,26 +1,28 @@
-package domain;
+package ac.su.learningplatform.domain;
 
-import domain.Lecture;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "User_lecture_progress")
+@Table(name = "User_video_progress")
 @Getter @Setter
-public class UserLectureProgress {
+public class UserVideoProgress {
     @EmbeddedId
-    private UserLectureProgressId id;
+    private UserVideoProgressId id;
 
     @MapsId("userId")
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("lectureId")
+    @MapsId("videoId")
     @ManyToOne
-    @JoinColumn(name = "lecture_id", nullable = false)
-    private Lecture lecture;
+    @JoinColumn(name = "video_id", nullable = false)
+    private Video video;
+
+    @Column(nullable = false)
+    private int watchTime = 0;
 
     @Column(nullable = false)
     private float progress = 0;

@@ -1,4 +1,4 @@
-package domain;
+package ac.su.learningplatform.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -6,12 +6,12 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "User")
+@Table(name = "Users")
 @Getter @Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @Column(nullable = false)
     private int role = 0;

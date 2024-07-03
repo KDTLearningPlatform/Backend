@@ -1,4 +1,4 @@
-package domain;
+package ac.su.learningplatform.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;

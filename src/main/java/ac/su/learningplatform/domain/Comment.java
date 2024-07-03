@@ -1,6 +1,5 @@
-package domain;
+package ac.su.learningplatform.domain;
 
-import domain.Study;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

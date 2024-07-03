@@ -1,14 +1,13 @@
-package domain;
+package ac.su.learningplatform.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDate;
 
 @Entity
-@Table(name = "Study")
+@Table(name = "lecture")
 @Getter @Setter
-public class Study {
+public class Lecture {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,18 +16,9 @@ public class Study {
     private String title;
 
     @Column(nullable = false)
-    private String field;
+    private int attendanceCount;
 
-    @Column(nullable = false)
-    private int viewCount;
-
-    @Column(nullable = false)
-    private LocalDate createDate = LocalDate.now();
-
-    @Column(nullable = false)
-    private LocalDate updateDate = LocalDate.now();
-
-    private LocalDate deleteDate;
+    private String thumbnail = "default.img";
 
     @Column(nullable = false)
     private int del = 0;
