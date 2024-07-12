@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Video")
@@ -11,28 +13,28 @@ import java.time.LocalDate;
 public class Video {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "video_id")
+    private Long videoId;
 
-    @Column(nullable = false)
+    @Column(name="title", nullable = false)
     private String title;
 
+    @Column(name="comment")
     private String comment;
 
-    @Column(nullable = false)
+    @Column(name="upload_date",nullable = false)
     private LocalDate uploadDate;
 
-    @Column(nullable = false)
-    private int runningTime;
+    @Column(name="running_time", nullable = false)
+    private LocalTime runningTime;
 
-    @Column(nullable = false)
+    @Column(name="thumbnail", nullable = false)
     private String thumbnail = "default.img";
 
-    @Column(nullable = false)
+    @Column(name="total_view", nullable = false)
     private int totalView = 0;
 
-    @Column(nullable = false)
-    private int del = 0;
-
+    // N:1 매핑
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -40,4 +42,8 @@ public class Video {
     @ManyToOne
     @JoinColumn(name = "lecture_id", nullable = false)
     private Lecture lecture;
+
+    // 1:N 매핑
+    @OneToMany(mappedBy = "video")
+    private List<UserVideoProgress> userVideoProgresses;
 }

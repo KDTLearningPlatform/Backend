@@ -11,17 +11,19 @@ import java.time.LocalDate;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "comment_id")
+    private Long commentId;
 
-    @Column(nullable = false)
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(nullable = false)
+    @Column(name = "create_Date", nullable = false)
     private LocalDate createDate = LocalDate.now();
 
-    @Column(nullable = false)
+    @Column(name = "del", nullable = false)
     private int del = 0;
 
+    // N:1 매핑
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

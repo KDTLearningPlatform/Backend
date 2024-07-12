@@ -21,9 +21,9 @@ public class UserVideoProgress {
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Column(nullable = false)
+    @Column(name="watch_time", nullable = false)
     private int watchTime = 0;
 
-    @Column(nullable = false)
+    @Column(name="progress", nullable = false)
     private float progress = 0;
 }

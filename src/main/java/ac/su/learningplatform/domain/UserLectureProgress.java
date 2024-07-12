@@ -21,6 +21,6 @@ public class UserLectureProgress {
     @JoinColumn(name = "lecture_id", nullable = false)
     private Lecture lecture;
 
-    @Column(nullable = false)
+    @Column(name="progress", nullable = false)
     private float progress = 0;
 }
