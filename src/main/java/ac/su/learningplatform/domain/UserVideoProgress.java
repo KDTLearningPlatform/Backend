@@ -9,21 +9,21 @@ import lombok.Setter;
 @Getter @Setter
 public class UserVideoProgress {
     @EmbeddedId
-    private UserVideoProgressId id;
+    private UserVideoProgressId id;  // 복합키
 
-    @MapsId("userId")
+    @MapsId("userId")   // UserVideoProgressId의 userId를 매핑
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("videoId")
+    @MapsId("videoId")  // UserVideoProgressId의 videoId를 매핑
     @ManyToOne
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Column(name="watch_time", nullable = false)
-    private int watchTime = 0;
+    @Column(name="last_playback_position", nullable = false)    // 마지막 재생 시점
+    private int lastPlaybackPosition = 0; // 기본값은 0
 
-    @Column(name="progress", nullable = false)
+    @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
 }

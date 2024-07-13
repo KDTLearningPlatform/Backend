@@ -9,18 +9,21 @@ import lombok.Setter;
 @Getter @Setter
 public class UserLectureProgress {
     @EmbeddedId
-    private UserLectureProgressId id;
+    private UserLectureProgressId id;   // 복합키
 
-    @MapsId("userId")
+    @MapsId("userId")   // UserLectureProgressId의 userId를 매핑
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("lectureId")
+    @MapsId("lectureId")    // UserLectureProgressId의 lectureId를 매핑
     @ManyToOne
     @JoinColumn(name = "lecture_id", nullable = false)
     private Lecture lecture;
 
-    @Column(name="progress", nullable = false)
+    @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
+
+    @Column(name="watched_count", nullable = false) // 시청 완료한 비디오 수
+    private int watchedCount = 0;
 }
