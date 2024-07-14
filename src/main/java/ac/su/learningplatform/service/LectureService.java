@@ -99,6 +99,7 @@ public class LectureService {
         currentLecture.setTitle(lectureDetailsDTO.getTitle());
         currentLecture.setComment(lectureDetailsDTO.getComment());
         currentLecture.setThumbnail(lectureDetailsDTO.getThumbnail());
+        currentLecture.setUpdateDate(LocalDateTime.now());
 
         // 기존 비디오 가져오기
         List<Video> existingVideos = currentLecture.getVideos();
@@ -161,11 +162,11 @@ public class LectureService {
         lectureDTO.setThumbnail(lecture.getThumbnail());
 
         // 삭제되지 않은 비디오만 가져오기
-        List<Video> deletedVideos = lecture.getVideos().stream()
+        List<Video> activeVideos = lecture.getVideos().stream()
                 .filter(video -> video.getDel() == DeleteStatus.ACTIVE)
                 .toList();
 
-        lectureDTO.setTotalVideoCount(deletedVideos.size());
+        lectureDTO.setTotalVideoCount(activeVideos.size());
         lectureDTO.setAttendanceCount(lecture.getAttendanceCount());
         lectureDTO.setUserId(lecture.getUser().getUserId());
         return lectureDTO;
@@ -182,13 +183,13 @@ public class LectureService {
         lectureDTO.setComment(lecture.getComment());
 
         // 삭제되지 않은 비디오만 가져오기
-        List<Video> deletedVideos = lecture.getVideos().stream()
+        List<Video> activeVideos = lecture.getVideos().stream()
                 .filter(video -> video.getDel() == DeleteStatus.ACTIVE)
                 .toList();
 
-        lectureDTO.setTotalVideoCount(deletedVideos.size());
+        lectureDTO.setTotalVideoCount(activeVideos.size());
         // 각 비디오의 runningTime을 합산
-        int totalSeconds = deletedVideos.stream()
+        int totalSeconds = activeVideos.stream()
                 .mapToInt(Video::getRunningTime)
                 .sum();
         // 초 단위로 합산된 시간을 시, 분, 초로 변환
@@ -198,15 +199,18 @@ public class LectureService {
         lectureDTO.setUserId(lecture.getUser().getUserId());
 
         // 비디오 목록을 videoOrder에 따라 오름차순 정렬 후 변환
-        lectureDTO.setVideos(deletedVideos.stream()
+        lectureDTO.setVideos(activeVideos.stream()
                 .sorted(Comparator.comparingInt(Video::getVideoOrder)) // videoOrder로 정렬
                 .map(video -> new VideoDTO.Response(
                         video.getVideoId(),
                         video.getVideoOrder(),
                         video.getTitle(),
                         video.getContent(),
-                        video.getRunningTime()))
-                .collect(Collectors.toList()));
+                        video.getRunningTime()
+                        )
+                )
+                .collect(Collectors.toList())
+        );
 
         return lectureDTO;
     }
