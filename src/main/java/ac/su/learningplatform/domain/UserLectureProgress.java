@@ -1,5 +1,6 @@
 package ac.su.learningplatform.domain;
 
+import com.mysql.cj.log.Log;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,4 +24,12 @@ public class UserLectureProgress {
 
     @Column(nullable = false)
     private float progress = 0;
+
+    public UserLectureProgress(Long userId, Long lectureId) {
+        this.id = new UserLectureProgressId(userId, lectureId);
+    }
+
+    public UserLectureProgress() {
+
+    }
 }
