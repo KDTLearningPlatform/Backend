@@ -10,9 +10,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LectureListDTO {
-    private Long id;
-    private String title;
-    private int attendanceCount;
+    private Long lectureId;
     private String thumbnail;
+    private String tag;
+    private String title;
+    private int totalVideoCount;
+    private int attendanceCount;
     private Long userId;
 }

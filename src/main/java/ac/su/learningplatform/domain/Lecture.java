@@ -20,6 +20,9 @@ public class Lecture {
     @Column(name = "title", nullable = false)   // 제목
     private String title;
 
+    @Column(name="comment") //설명
+    private String comment;
+
     @Column(name = "thumbnail") // 썸네일
     private String thumbnail = "default.img";
 
@@ -40,7 +43,7 @@ public class Lecture {
     private String tag;
 
     @Column(name = "attendance_count", nullable = false)    // 수강자 수 (조회수)
-    private int attendanceCount;    // UserLectureProgress 테이블의 특정 lecture_id에 해당하는 userI를 count
+    private int attendanceCount;    // UserLectureProgress 테이블의 특정 lecture_id에 해당하는 userId를 count
 
     // N:1 매핑
     @ManyToOne
@@ -53,6 +56,5 @@ public class Lecture {
 
     @OneToMany(mappedBy = "lecture")
     private List<UserLectureProgress> userLectureProgresses;
-
 
 }

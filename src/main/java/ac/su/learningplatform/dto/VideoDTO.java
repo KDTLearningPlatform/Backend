@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalTime;
-
 public class VideoDTO {
     @Getter
     @Setter
@@ -14,7 +12,8 @@ public class VideoDTO {
     @NoArgsConstructor
     public static class Request {
         private String title;
-        private String comment;
+        private String content;
+        private int runningTime;
     }
 
     @Getter
@@ -23,10 +22,9 @@ public class VideoDTO {
     @NoArgsConstructor
     public static class Response {
         private Long videoId;
+        private int videoOrder;
         private String title;
-        private String comment;
-        private LocalTime runningTime;
-        private String thumbnail;
-        private int totalView;
+        private String content;
+        private int runningTime;
     }
 }

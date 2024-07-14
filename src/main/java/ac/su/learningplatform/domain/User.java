@@ -67,8 +67,6 @@ public class User {
     private int dailyVidCnt = 0;    // 기본값은 0
 
     // 1:N 매핑
-    @OneToMany(mappedBy = "user")
-    private List<Video> videos;
 
     @OneToMany(mappedBy = "user")
     private List<Lecture> lectures;
