@@ -30,7 +30,10 @@ public class User {
     @Column(name="profile_image", nullable = false) // 프로필 이미지
     private String profileImage;    // 소셜 회원가입 시 설정
 
-    @Column(name="total_point", nullable = false)   // 총 포인트
+    @Column(name="nickname")  // 닉네임
+    private String nickname;    // 소셜 회원가입 후 추가로 받는 사항
+
+    @Column(name="total_point")   // 총 포인트
     private int totalPoint = 0; // 기본값은 0
 
     @Column(name="signup_date", nullable = false)   // 가입일자
@@ -61,7 +64,7 @@ public class User {
     private String socialType;  // 소셜 회원가입 시 설정     // Enum 타입으로 변경해도 됨
 
     @Column(name="goal_vid_cnt", nullable = false)  // 하루 목표 영상 수
-    private int goalVidCnt = 0; // 기본값은 0
+    private int goalVidCnt = 0; // 소셜 회원가입 후 추가로 받는 사항
 
     @Column(name="daily_vid_cnt", nullable = false) // 하루 시청한 영상 수
     private int dailyVidCnt = 0;    // 기본값은 0
@@ -82,7 +85,4 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<UserVideoProgress> userStudyProgresses;
-
-
-
 }

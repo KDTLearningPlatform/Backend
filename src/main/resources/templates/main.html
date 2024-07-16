@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <title>Main Page</title>
+</head>
+<body>
+<h1>메인 페이지</h1>
+<p>환영합니다, <span th:text="${name}">유저 이름</span>!</p>
+<p>이메일: <span th:text="${email}">이메일</span></p>
+<p>목표 강의 수: <span th:text="${goalVidCnt}">0</span></p>
+<p>오늘 시청한 강의 수: <span th:text="${dailyVidCnt}">0</span></p><p>이메일: <span th:text="${email}">이메일</span></p>
+<p>목표 강의 수: <span th:text="${goalVidCnt}">0</span></p>
+<p>오늘 시청한 강의 수: <span th:text="${dailyVidCnt}">0</span></p>
+<form th:action="@{/auth/logout}" method="post">
+    <button type="submit">로그아웃</button>
+</form>
+<form th:action="@{/auth/editProfile}" method="get">
+    <button type="submit">프로필 편집</button>
+</form>
+</body>
+</html>

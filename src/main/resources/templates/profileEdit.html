@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+</head>
+<body>
+<h1>프로필 편집</h1>
+<form th:action="@{/auth/updateProfile}" method="post">
+    <div>
+        <label>이메일: </label>
+        <span th:text="${email}">이메일</span>
+    </div>
+    <div>
+        <label>이름: </label>
+        <span th:text="${name}">이름</span>
+    </div>
+    <div>
+        <label for="nickname">닉네임:</label>
+        <input type="text" id="nickname" name="nickname" th:value="${nickname}" required/>
+    </div>
+    <div>
+        <label for="goalVidCnt">하루 목표 강의 수:</label>
+        <select id="goalVidCnt" name="goalVidCnt" th:value="${goalVidCnt}" required>
+            <option value="1" th:selected="${goalVidCnt == 1}">1</option>
+            <option value="2" th:selected="${goalVidCnt == 2}">2</option>
+            <option value="3" th:selected="${goalVidCnt == 3}">3</option>
+        </select>
+    </div>
+    <div>
+        <label for="profileImage">프로필 이미지 URL:</label>
+        <input type="text" id="profileImage" name="profileImage" th:value="${profileImage}" required/>
+    </div>
+    <button type="submit">업데이트</button>
+</form>
+</body>
+</html>
