@@ -1,7 +1,6 @@
 package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.dto.LectureProgressDTO;
-import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.domain.UserLectureProgress;
 import ac.su.learningplatform.domain.UserVideoProgress;
 import ac.su.learningplatform.repository.LectureRepository;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class LectureProgressService {
+public class UserLectureProgressService {
 
     @Autowired
     private UserLectureProgressRepository userLectureProgressRepository;
@@ -25,9 +24,9 @@ public class LectureProgressService {
     private LectureRepository lectureRepository;
 
     @Autowired
-    public LectureProgressService(UserLectureProgressRepository userLectureProgressRepository,
-                                  UserVideoProgressRepository userVideoProgressRepository,
-                                  LectureRepository lectureRepository) {
+    public UserLectureProgressService(UserLectureProgressRepository userLectureProgressRepository,
+                                      UserVideoProgressRepository userVideoProgressRepository,
+                                      LectureRepository lectureRepository) {
         this.userLectureProgressRepository = userLectureProgressRepository;
         this.userVideoProgressRepository = userVideoProgressRepository;
         this.lectureRepository = lectureRepository;
@@ -41,7 +40,7 @@ public class LectureProgressService {
         int totalRunningTime = videoProgressList.stream().mapToInt(v -> v.getVideo().getRunningTime()).sum();
         float progress = (float) totalWatchTime / totalRunningTime * 100;
 
-        UserLectureProgress userLectureProgress = userLectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)
+        UserLectureProgress userLectureProgress = (UserLectureProgress) userLectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)
                 .orElse(new UserLectureProgress(userId, lectureId));
         userLectureProgress.setProgress(progress);
         userLectureProgressRepository.save(userLectureProgress);

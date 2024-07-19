@@ -26,4 +26,8 @@ public class UserLectureProgress {
 
     @Column(name="watched_count", nullable = false) // 시청 완료한 비디오 수
     private int watchedCount = 0;
+
+    public UserLectureProgress(Long userId, Long lectureId) {
+
+    }
 }

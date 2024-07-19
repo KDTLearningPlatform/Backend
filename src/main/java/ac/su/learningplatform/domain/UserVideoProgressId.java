@@ -18,4 +18,7 @@ public class UserVideoProgressId implements Serializable {
 
     @Column(name = "video_id")
     private Long videoId;
+
+    public UserVideoProgressId(Long userId, Long videoId) {
+    }
 }

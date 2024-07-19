@@ -36,4 +36,8 @@ public class UserVideoProgress {
     public UserVideoProgress(Long userId, Long videoId) {
         this.id = new UserVideoProgressId(userId, videoId);
     }
+
+    public int getWatchTime() {
+        return 0;
+    }
 }
