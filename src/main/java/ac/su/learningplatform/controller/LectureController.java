@@ -3,21 +3,35 @@ package ac.su.learningplatform.controller;
 import ac.su.learningplatform.dto.LectureDetailsDTO;
 import ac.su.learningplatform.dto.LectureListDTO;
 import ac.su.learningplatform.dto.LectureRequestDTO;
+import ac.su.learningplatform.service.JwtService;
 import ac.su.learningplatform.service.LectureService;
+import ac.su.learningplatform.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/api/lectures")
 public class LectureController {
 
     private final LectureService lectureService;
+    private final JwtService jwtService;
+    private final UserService userService;
 
-    public LectureController(LectureService lectureService) {
+    public LectureController(LectureService lectureService, JwtService jwtService, UserService userService) {
         this.lectureService = lectureService;
+        this.jwtService = jwtService;
+        this.userService = userService;
+    }
+
+    @GetMapping("/createLecture")
+    public String createLecturePage() {
+        return "createLecture";
     }
 
     @GetMapping
@@ -35,8 +49,21 @@ public class LectureController {
     }
 
     @PostMapping
-    public ResponseEntity<LectureRequestDTO> createLecture(@RequestBody LectureRequestDTO lectureRequestDTO) {
-        LectureRequestDTO createdLectureDTO = lectureService.createLecture(lectureRequestDTO);
+    public ResponseEntity<LectureRequestDTO> createLecture(
+            @RequestPart("lecture") LectureRequestDTO lectureRequestDTO,
+            @RequestPart("files") List<MultipartFile> files, HttpSession session) {
+
+        String jwtToken = (String) session.getAttribute("jwtToken");
+
+        if (jwtToken == null || jwtToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String userEmail = jwtService.extractUsername(jwtToken);
+        Long userId = userService.findByEmail(userEmail).getUserId();
+
+        lectureRequestDTO.setUserId(userId);
+        LectureRequestDTO createdLectureDTO = lectureService.createLecture(lectureRequestDTO, files);
         return new ResponseEntity<>(createdLectureDTO, HttpStatus.CREATED);
     }
 

@@ -3,15 +3,13 @@ package ac.su.learningplatform.service;
 import ac.su.learningplatform.constant.DeleteStatus;
 import ac.su.learningplatform.domain.Lecture;
 import ac.su.learningplatform.domain.Video;
-import ac.su.learningplatform.dto.LectureDetailsDTO;
-import ac.su.learningplatform.dto.LectureListDTO;
-import ac.su.learningplatform.dto.LectureRequestDTO;
-import ac.su.learningplatform.dto.VideoDTO;
+import ac.su.learningplatform.dto.*;
 import ac.su.learningplatform.repository.LectureRepository;
 import ac.su.learningplatform.repository.UserRepository;
 import ac.su.learningplatform.repository.VideoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,11 +23,13 @@ public class LectureService {
     private final LectureRepository lectureRepository;
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
-    public LectureService(LectureRepository lectureRepository, VideoRepository videoRepository, UserRepository userRepository) {
+    public LectureService(LectureRepository lectureRepository, VideoRepository videoRepository, UserRepository userRepository, S3Service s3Service) {
         this.lectureRepository = lectureRepository;
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
+        this.s3Service = s3Service;
     }
 
     // 모든 강의 목록 조회
@@ -66,19 +66,22 @@ public class LectureService {
     }
 
     // 강의 생성
-    public LectureRequestDTO createLecture(LectureRequestDTO lectureRequestDTO) {
+    public LectureRequestDTO createLecture(LectureRequestDTO lectureRequestDTO, List<MultipartFile> videoFiles) {
         Lecture lecture = convertToLecture(lectureRequestDTO);
         Lecture savedLecture = lectureRepository.save(lecture);
 
-        List<Video> videos = IntStream.range(0, lectureRequestDTO.getVideos().size())
+        List<Video> videos = IntStream.range(0, videoFiles.size())
                 .mapToObj(index -> {
-                    VideoDTO.Request videoDTO = lectureRequestDTO.getVideos().get(index);
+                    MultipartFile videoFile = videoFiles.get(index);
+                    String videoUrl = s3Service.uploadFile(videoFile);
+                    int duration = s3Service.getVideoDuration(videoFile);
+                    VideoMetadataDTO videoMetadata = lectureRequestDTO.getVideos().get(index);
                     Video video = new Video();
                     video.setVideoOrder(index + 1);
-                    video.setTitle(videoDTO.getTitle());
-                    video.setContent(videoDTO.getContent());
+                    video.setTitle(videoMetadata.getTitle());
+                    video.setContent(videoUrl);
                     video.setUploadDate(LocalDateTime.now());
-                    video.setRunningTime(videoDTO.getRunningTime()); // 실제 runningTime 계산 로직 필요
+                    video.setRunningTime(duration);
                     video.setLecture(savedLecture);
                     return video;
                 })
@@ -98,7 +101,6 @@ public class LectureService {
         // 강의 정보 업데이트
         currentLecture.setTitle(lectureDetailsDTO.getTitle());
         currentLecture.setComment(lectureDetailsDTO.getComment());
-        currentLecture.setThumbnail(lectureDetailsDTO.getThumbnail());
         currentLecture.setUpdateDate(LocalDateTime.now());
 
         // 기존 비디오 가져오기
@@ -159,7 +161,6 @@ public class LectureService {
         lectureDTO.setLectureId(lecture.getLectureId());
         lectureDTO.setTag(lecture.getTag());
         lectureDTO.setTitle(lecture.getTitle());
-        lectureDTO.setThumbnail(lecture.getThumbnail());
 
         // 삭제되지 않은 비디오만 가져오기
         List<Video> activeVideos = lecture.getVideos().stream()
@@ -177,7 +178,6 @@ public class LectureService {
 
         LectureDetailsDTO lectureDTO = new LectureDetailsDTO();
         lectureDTO.setLectureId(lecture.getLectureId());
-        lectureDTO.setThumbnail(lecture.getThumbnail());
         lectureDTO.setTag(lecture.getTag());
         lectureDTO.setTitle(lecture.getTitle());
         lectureDTO.setComment(lecture.getComment());
@@ -202,11 +202,11 @@ public class LectureService {
         lectureDTO.setVideos(activeVideos.stream()
                 .sorted(Comparator.comparingInt(Video::getVideoOrder)) // videoOrder로 정렬
                 .map(video -> new VideoDTO.Response(
-                        video.getVideoId(),
-                        video.getVideoOrder(),
-                        video.getTitle(),
-                        video.getContent(),
-                        video.getRunningTime()
+                                video.getVideoId(),
+                                video.getVideoOrder(),
+                                video.getTitle(),
+                                video.getContent(),
+                                video.getRunningTime()
                         )
                 )
                 .collect(Collectors.toList())
@@ -218,7 +218,6 @@ public class LectureService {
     // LectureRequestDTO -> Lecture 변환
     private Lecture convertToLecture(LectureRequestDTO requestDTO) {
         Lecture lecture = new Lecture();
-        lecture.setThumbnail(requestDTO.getThumbnail());
         lecture.setTag(requestDTO.getTag());
         lecture.setTitle(requestDTO.getTitle());
         lecture.setComment(requestDTO.getComment());

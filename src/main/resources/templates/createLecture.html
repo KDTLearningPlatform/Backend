@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="kr">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Lecture</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    form {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+    }
+    .video-entry {
+      position: relative;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .remove-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      color: red;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+</head>
+<body>
+<h1>강의 생성</h1>
+<form id="createLectureForm" enctype="multipart/form-data">
+  <label for="title">강의 제목:</label>
+  <input type="text" id="title" name="title" required><br>
+
+  <label for="tag">태그:</label>
+  <input type="text" id="tag" name="tag" required><br>
+
+  <label for="comment">강의 설명:</label>
+  <textarea id="comment" name="comment" required></textarea><br>
+
+  <div id="videosContainer">
+    <div class="video-entry">
+      <span class="remove-button" onclick="removeVideoEntry(this)">-</span>
+      <label for="videoTitle0">비디오 제목:</label>
+      <input type="text" id="videoTitle0" name="videoTitles" class="video-title" required><br>
+
+      <label for="videoFile0">비디오 파일:</label>
+      <input type="file" id="videoFile0" name="files" class="video-file" required><br>
+    </div>
+  </div>
+
+  <button type="button" onclick="addVideoEntry()">비디오 추가</button>
+  <button type="button" onclick="submitForm()">강의 생성</button>
+</form>
+
+<script>
+  let videoIndex = 1;
+
+  function addVideoEntry() {
+    const videosContainer = document.getElementById('videosContainer');
+    const newEntry = document.createElement('div');
+    newEntry.classList.add('video-entry');
+    newEntry.innerHTML = `
+      <span class="remove-button" onclick="removeVideoEntry(this)">-</span>
+      <label for="videoTitle${videoIndex}">비디오 제목:</label>
+      <input type="text" id="videoTitle${videoIndex}" name="videoTitles" class="video-title" required><br>
+
+      <label for="videoFile${videoIndex}">비디오 파일:</label>
+      <input type="file" id="videoFile${videoIndex}" name="files" class="video-file" required><br>
+    `;
+    videosContainer.appendChild(newEntry);
+    videoIndex++;
+  }
+
+  function removeVideoEntry(button) {
+    const entry = button.parentNode;
+    entry.parentNode.removeChild(entry);
+  }
+
+  function submitForm() {
+    const form = document.getElementById('createLectureForm');
+    const formData = new FormData(form);
+    const videoTitles = Array.from(document.getElementsByClassName('video-title')).map(input => input.value.trim());
+    const videoFiles = document.getElementsByClassName('video-file');
+
+    if (videoTitles.length !== videoFiles.length) {
+      alert('비디오 제목과 파일의 수가 일치하지 않습니다.');
+      return;
+    }
+
+    const videos = videoTitles.map((title, index) => ({ title, video_order: index + 1 }));
+    const lecture = {
+      tag: document.getElementById('tag').value,
+      title: document.getElementById('title').value,
+      comment: document.getElementById('comment').value,
+      videos: videos
+    };
+
+    formData.append('lecture', new Blob([JSON.stringify(lecture)], { type: 'application/json' }));
+
+    fetch('/api/lectures', {
+      method: 'POST',
+      body: formData
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('강의 생성 중 오류 발생');
+      }
+      return response.json();
+    }).then(data => {
+      alert('강의가 성공적으로 생성되었습니다!');
+    }).catch(error => {
+      alert(error.message);
+    });
+  }
+
+  // 드래그 앤 드롭 기능 추가
+  const sortable = new Sortable(document.getElementById('videosContainer'), {
+    animation: 150,
+    handle: '.video-entry'
+  });
+</script>
+</body>
+</html>

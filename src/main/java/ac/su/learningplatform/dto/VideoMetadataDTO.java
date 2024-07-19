@@ -5,16 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LectureRequestDTO {
-    private String tag;
+public class VideoMetadataDTO {
     private String title;
-    private String comment;
-    private Long userId;
-    private List<VideoMetadataDTO> videos;
 }
