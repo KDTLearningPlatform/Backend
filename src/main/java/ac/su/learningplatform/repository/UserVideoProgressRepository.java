@@ -11,11 +11,8 @@ import java.util.Optional;
 @Repository
 public interface UserVideoProgressRepository extends JpaRepository<UserVideoProgress, Long> {
 
-    List<UserVideoProgress> findByUserUserId(Long userId);
-
-    List<UserVideoProgress> findByVideoVideoId(Long videoId);
-
-    Optional<UserVideoProgress> findByUserUserIdAndVideoVideoId(Long userId, Long videoId);
-
+    @Query("SELECT uvp FROM UserVideoProgress uvp WHERE uvp.user.id = :userId AND uvp.video.lecture.id = :lectureId")
     List<UserVideoProgress> findByUserIdAndLectureId(Long userId, Long lectureId);
+
+    Optional<UserVideoProgress> findByUserIdAndVideoId(Long userId, Long videoId);
 }

@@ -1,10 +1,8 @@
 package ac.su.learningplatform.controller;
 
-import ac.su.learningplatform.dto.LectureDetailsDTO;
-import ac.su.learningplatform.dto.LectureListDTO;
-import ac.su.learningplatform.dto.LectureRequestDTO;
+import ac.su.learningplatform.dto.LectureCompletedDto;
 import ac.su.learningplatform.service.LectureService;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,48 +10,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/lectures")
+@RequiredArgsConstructor
 public class LectureController {
-
     private final LectureService lectureService;
 
-    public LectureController(LectureService lectureService) {
-        this.lectureService = lectureService;
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLecture(@PathVariable Long id) {
+        boolean isDeleted = lectureService.deleteLecture(id);
+        if (isDeleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @GetMapping
-    public ResponseEntity<List<LectureListDTO>> getAllLectures(
-            @RequestParam(required = false) String tag,
-            @RequestParam(required = false) String keyword) {
-        List<LectureListDTO> lectures = lectureService.getAllFilteredLectures(tag, keyword);
-        return new ResponseEntity<>(lectures, HttpStatus.OK);
+    @GetMapping("/completed/{userId}")
+    public List<LectureCompletedDto> getCompletedLectures(@PathVariable Long userId) {
+        return lectureService.getCompletedLectures(userId);
     }
-
-    @GetMapping("/{lectureId}")
-    public ResponseEntity<LectureDetailsDTO> getLectureById(@PathVariable Long lectureId) {
-        LectureDetailsDTO lectureDTO = lectureService.getLectureById(lectureId);
-        return new ResponseEntity<>(lectureDTO, HttpStatus.OK);
-    }
-
-    @PostMapping
-    public ResponseEntity<LectureRequestDTO> createLecture(@RequestBody LectureRequestDTO lectureRequestDTO) {
-        LectureRequestDTO createdLectureDTO = lectureService.createLecture(lectureRequestDTO);
-        return new ResponseEntity<>(createdLectureDTO, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{lectureId}")
-    public ResponseEntity<LectureDetailsDTO> updateLecture(
-            @PathVariable Long lectureId,
-            @RequestBody LectureDetailsDTO lectureDetailsDTO) {
-        LectureDetailsDTO updatedLecture = lectureService.updateLecture(lectureId, lectureDetailsDTO);
-        return new ResponseEntity<>(updatedLecture, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{lectureId}")
-    public ResponseEntity<Void> deleteLecture(@PathVariable Long lectureId) {
-        lectureService.deleteLecture(lectureId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-
-
 }

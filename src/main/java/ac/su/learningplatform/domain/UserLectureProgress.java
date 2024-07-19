@@ -1,5 +1,6 @@
 package ac.su.learningplatform.domain;
 
+import com.mysql.cj.log.Log;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,25 +10,26 @@ import lombok.Setter;
 @Getter @Setter
 public class UserLectureProgress {
     @EmbeddedId
-    private UserLectureProgressId id;   // 복합키
+    private UserLectureProgressId id;
 
-    @MapsId("userId")   // UserLectureProgressId의 userId를 매핑
+    @MapsId("userId")
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("lectureId")    // UserLectureProgressId의 lectureId를 매핑
+    @MapsId("lectureId")
     @ManyToOne
     @JoinColumn(name = "lecture_id", nullable = false)
     private Lecture lecture;
 
-    @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
+    @Column(nullable = false)
     private float progress = 0;
 
-    @Column(name="watched_count", nullable = false) // 시청 완료한 비디오 수
-    private int watchedCount = 0;
-
     public UserLectureProgress(Long userId, Long lectureId) {
+        this.id = new UserLectureProgressId(userId, lectureId);
+    }
+
+    public UserLectureProgress() {
 
     }
 }
