@@ -23,9 +23,6 @@ public class Lecture {
     @Column(name="comment") //설명
     private String comment;
 
-    @Column(name = "thumbnail") // 썸네일
-    private String thumbnail = "default.img";
-
     @Column(name = "create_date", nullable = false) // 생성일자
     private LocalDateTime createDate = LocalDateTime.now(); // 기본값은 현재시간
 
