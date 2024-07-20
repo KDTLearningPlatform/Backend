@@ -1,6 +1,7 @@
 package ac.su.learningplatform.controller;
 
 import ac.su.learningplatform.dto.LectureProgressDTO;
+import ac.su.learningplatform.service.LectureProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/lectures")
+@RequestMapping("/api/lectureProgress")
 @Controller
 public class LectureProgressController {
     private final LectureProgressService lectureProgressService;

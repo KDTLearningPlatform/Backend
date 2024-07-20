@@ -9,6 +9,7 @@ import lombok.*;
 @Table(name = "User_lecture_progress")
 @Getter @Setter
 public class UserLectureProgress {
+
     @EmbeddedId
     private UserLectureProgressId id;
 
@@ -36,4 +37,14 @@ public class UserLectureProgress {
         this.progress = progress;
         this.watchedCount = watchedCount;
     }
+
+    //생성자 추가
+    public UserLectureProgress(Long userId, Long lectureId) {
+        this.id = new UserLectureProgressId(userId, lectureId);
+        this.user = new User();
+        this.lecture = new Lecture();
+        this.progress = 0;
+        this.watchedCount = 0;
+    }
+
 }

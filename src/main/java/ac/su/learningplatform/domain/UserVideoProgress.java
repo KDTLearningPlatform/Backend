@@ -1,26 +1,22 @@
 package ac.su.learningplatform.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(name = "User_video_progress")
 @Getter @Setter
 public class UserVideoProgress {
     @EmbeddedId
-    private UserVideoProgressId id;
+    private UserVideoProgressId id;  // 복합키
 
-    @MapsId("userId")
+    @MapsId("userId")   // UserVideoProgressId의 userId를 매핑
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @MapsId("videoId")
+    @MapsId("videoId")  // UserVideoProgressId의 videoId를 매핑
     @ManyToOne
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
@@ -31,7 +27,23 @@ public class UserVideoProgress {
     @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
 
-    public Video getVideo() {
-        return video;
+    public UserVideoProgress(Long userId, Long videoId) {
+        this.id = new UserVideoProgressId(userId, videoId);
+        this.user = new User();
+        this.video = new Video();
+        this.lastPlaybackPosition = 0;
+        this.progress = 0;
+    }
+
+    public UserVideoProgress() {
+
+    }
+
+    public void setWatchTime(int watchTime) {
+        this.lastPlaybackPosition = watchTime;
+    }
+
+    public int getWatchTime() {
+        return lastPlaybackPosition;
     }
 }

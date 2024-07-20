@@ -6,16 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/video-progress")
+@RequestMapping("/api/videoProgress")
 public class VideoProgressController {
 
     @Autowired
     private VideoProgressService videoProgressService;
-
-    @GetMapping("/{userId}}/{videoId}")
-    public VideoProgressDTO getVideoProgress(@PathVariable Long userId, @PathVariable Long videoId) {
-        return videoProgressService.getVideoProgress(userId, videoId);
-    }
 
     @PostMapping("/{userId}/{videoId}")
     public VideoProgressDTO updateVideoProgress(@PathVariable Long userId, @PathVariable Long videoId, @RequestParam int watchTime) {

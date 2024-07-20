@@ -1,15 +1,16 @@
 package ac.su.learningplatform.repository;
 
 import ac.su.learningplatform.domain.UserVideoProgress;
+import ac.su.learningplatform.domain.UserVideoProgressId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserVideoProgressRepository extends JpaRepository<UserVideoProgress, Long> {
-    Optional<UserVideoProgress> findByUserIdAndVideoId(Long userId, Long videoId);
-    List<UserVideoProgress> findByUserIdAndVideo_LectureId(Long userId, Long lectureId);
+    Optional<UserVideoProgress> findByUser_UserIdAndVideo_VideoId(Long userId, Long videoId);
+
+    List<UserVideoProgress> findByUser_UserIdAndVideo_Lecture_LectureId(Long userId, Long lectureId);
 }

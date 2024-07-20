@@ -8,5 +8,5 @@ import lombok.Data;
 public class LectureCompletedDto {
     private Long id;
     private String title;
-    private String thumbnail;
+    //private String thumbnail;
 }
