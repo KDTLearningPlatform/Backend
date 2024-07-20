@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LectureListDTO {
     private Long lectureId;
-    private String thumbnail;
+    //private String thumbnail;
     private String tag;
     private String title;
     private int totalVideoCount;

@@ -1,6 +1,5 @@
 package ac.su.learningplatform.domain;
 
-import com.mysql.cj.log.Log;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,11 +24,6 @@ public class UserLectureProgress {
     @Column(nullable = false)
     private float progress = 0;
 
-    public UserLectureProgress(Long userId, Long lectureId) {
-        this.id = new UserLectureProgressId(userId, lectureId);
-    }
-
-    public UserLectureProgress() {
-
-    }
+    @Column(name="watched_count", nullable = false) // 시청 완료한 비디오 수
+    private int watchedCount = 0;
 }

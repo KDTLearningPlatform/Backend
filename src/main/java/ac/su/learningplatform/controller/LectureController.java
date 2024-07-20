@@ -81,6 +81,9 @@ public class LectureController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-
-
+//    @GetMapping("/{lectureId}/progress")
+//    public ResponseEntity<Double> getAverageProgress(@PathVariable Long lectureId) {
+//        Double averageProgress = lectureService.getAverageProgress(lectureId);
+//        return new ResponseEntity<>(averageProgress, HttpStatus.OK);
+//    }
 }

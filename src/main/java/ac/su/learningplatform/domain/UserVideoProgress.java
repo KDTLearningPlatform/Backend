@@ -25,15 +25,9 @@ public class UserVideoProgress {
     @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Column(nullable = false)
-    private int watchTime = 0;
+    @Column(name="last_playback_position", nullable = false)    // 마지막 재생 시점
+    private int lastPlaybackPosition = 0; // 기본값은 0
 
-    @Column(nullable = false)
+    @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
-
-
-
-    public UserVideoProgress(Long userId, Long videoId) {
-        this.id = new UserVideoProgressId(userId, videoId);
-    }
 }

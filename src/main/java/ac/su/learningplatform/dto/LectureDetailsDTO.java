@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class LectureDetailsDTO {
     private Long lectureId;
-    private String thumbnail;
+    //private String thumbnail;
     private String tag;
     private String title;
     private String comment;
