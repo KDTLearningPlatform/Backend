@@ -30,4 +30,8 @@ public class UserVideoProgress {
 
     @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
+
+    public Video getVideo() {
+        return video;
+    }
 }

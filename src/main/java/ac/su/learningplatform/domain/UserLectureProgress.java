@@ -1,9 +1,10 @@
 package ac.su.learningplatform.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "User_lecture_progress")
 @Getter @Setter
@@ -26,4 +27,13 @@ public class UserLectureProgress {
 
     @Column(name="watched_count", nullable = false) // 시청 완료한 비디오 수
     private int watchedCount = 0;
+
+    //생성자 추가
+    public UserLectureProgress(UserLectureProgressId id, User user, Lecture lecture, float progress, int watchedCount) {
+        this.id = id;
+        this.user = user;
+        this.lecture = lecture;
+        this.progress = progress;
+        this.watchedCount = watchedCount;
+    }
 }

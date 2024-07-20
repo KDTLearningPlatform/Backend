@@ -12,6 +12,11 @@ public class VideoProgressController {
     @Autowired
     private VideoProgressService videoProgressService;
 
+    @GetMapping("/{userId}}/{videoId}")
+    public VideoProgressDTO getVideoProgress(@PathVariable Long userId, @PathVariable Long videoId) {
+        return videoProgressService.getVideoProgress(userId, videoId);
+    }
+
     @PostMapping("/{userId}/{videoId}")
     public VideoProgressDTO updateVideoProgress(@PathVariable Long userId, @PathVariable Long videoId, @RequestParam int watchTime) {
         return videoProgressService.updateVideoProgress(userId, videoId, watchTime);
