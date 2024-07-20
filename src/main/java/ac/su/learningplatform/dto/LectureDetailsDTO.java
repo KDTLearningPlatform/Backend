@@ -14,12 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 public class LectureDetailsDTO {
     private Long lectureId;
-    private String thumbnail;
     private String tag;
     private String title;
     private String comment;
-    private Integer totalVideoCount;
-    private LocalTime totalRunningTime;
+    private int totalVideoCount;
+    private int totalRunningTime;
     private Long userId;
     private List<VideoDTO.Response> videos;
 }

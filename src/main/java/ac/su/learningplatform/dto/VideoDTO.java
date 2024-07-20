@@ -10,16 +10,6 @@ public class VideoDTO {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class Request {
-        private String title;
-        private String content;
-        private int runningTime;
-    }
-
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @NoArgsConstructor
     public static class Response {
         private Long videoId;
         private int videoOrder;

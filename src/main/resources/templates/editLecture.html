@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Lecture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+        .video-entry {
+            position: relative;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: move;
+        }
+        .remove-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: red;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+</head>
+<body>
+<h1>강의 수정</h1>
+<form id="editLectureForm" enctype="multipart/form-data">
+    <label for="title">강의 제목:</label>
+    <input type="text" id="title" name="title" required><br>
+
+    <label for="tag">태그:</label>
+    <input type="text" id="tag" name="tag" required><br>
+
+    <label for="comment">강의 설명:</label>
+    <textarea id="comment" name="comment" required></textarea><br>
+
+    <div id="videosContainer">
+        <!-- 기존 비디오 목록이 여기에 동적으로 추가됩니다 -->
+    </div>
+
+    <button type="button" onclick="addVideoEntry()">비디오 추가</button>
+    <button type="button" onclick="submitForm()">강의 수정</button>
+</form>
+
+<script>
+    let videoIndex = 0;
+    let lectureId;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        lectureId = window.location.pathname.split('/').pop();
+
+        fetch(`/api/lectures/${lectureId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('강의 정보를 불러오는 중 오류가 발생했습니다.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('title').value = data.title;
+                document.getElementById('tag').value = data.tag;
+                document.getElementById('comment').value = data.comment;
+
+                const videosContainer = document.getElementById('videosContainer');
+                data.videos.forEach(video => {
+                    addVideoEntry(video);
+                });
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+    });
+
+    function addVideoEntry(video = {}) {
+        const videosContainer = document.getElementById('videosContainer');
+        const newEntry = document.createElement('div');
+        newEntry.classList.add('video-entry');
+        newEntry.innerHTML = `
+            <span class="remove-button" onclick="removeVideoEntry(this)">-</span>
+            <label for="videoTitle${videoIndex}">비디오 제목:</label>
+            <input type="text" id="videoTitle${videoIndex}" name="videoTitles" class="video-title" value="${video.title || ''}" required><br>
+
+            <label for="videoFile${videoIndex}">비디오 파일:</label>
+            <input type="file" id="videoFile${videoIndex}" name="files" class="video-file" onchange="updateRunningTime(this, ${videoIndex})"><br>
+
+            <input type="hidden" name="videoIds" value="${video.videoId || ''}">
+            <input type="hidden" name="videoContents" value="${video.content || ''}">
+            <input type="hidden" id="runningTime${videoIndex}" name="runningTimes" value="${video.runningTime || 0}">
+        `;
+        videosContainer.appendChild(newEntry);
+        videoIndex++;
+    }
+
+    function removeVideoEntry(button) {
+        const entry = button.parentNode;
+        entry.parentNode.removeChild(entry);
+    }
+
+    function updateRunningTime(fileInput, index) {
+        const file = fileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const blob = new Blob([new Uint8Array(event.target.result)], { type: file.type });
+                const url = URL.createObjectURL(blob);
+                const videoElement = document.createElement('video');
+                videoElement.src = url;
+                videoElement.onloadedmetadata = function() {
+                    document.getElementById(`runningTime${index}`).value = Math.round(videoElement.duration);
+                    URL.revokeObjectURL(url);
+                };
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    }
+
+    function submitForm() {
+        const form = document.getElementById('editLectureForm');
+        const formData = new FormData(form);
+        const videoEntries = document.querySelectorAll('.video-entry');
+
+        const videos = Array.from(videoEntries).map((entry, index) => {
+            const title = entry.querySelector('.video-title').value.trim();
+            const videoId = entry.querySelector('[name="videoIds"]').value;
+            const content = entry.querySelector('[name="videoContents"]').value;
+            const runningTime = entry.querySelector('[name="runningTimes"]').value;
+
+            return {
+                title,
+                videoId,
+                content,
+                video_order: index + 1,
+                runningTime: parseInt(runningTime)
+            };
+        });
+
+        const lecture = {
+            title: document.getElementById('title').value,
+            tag: document.getElementById('tag').value,
+            comment: document.getElementById('comment').value,
+            videos: videos
+        };
+
+        formData.append('lecture', new Blob([JSON.stringify(lecture)], { type: 'application/json' }));
+
+        fetch(`/api/lectures/${lectureId}`, {
+            method: 'PUT',
+            body: formData
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('강의 수정 중 오류가 발생했습니다.');
+            }
+            return response.json();
+        }).then(data => {
+            alert('강의가 성공적으로 수정되었습니다!');
+            window.location.href = `/api/lectures/details/${lectureId}`;
+        }).catch(error => {
+            alert(error.message);
+        });
+    }
+
+    // 드래그 앤 드롭 기능 추가
+    const sortable = new Sortable(document.getElementById('videosContainer'), {
+        animation: 150,
+        handle: '.video-entry'
+    });
+</script>
+</body>
+</html>

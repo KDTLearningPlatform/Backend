@@ -12,9 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -93,66 +94,70 @@ public class LectureService {
     }
 
     // 강의 수정
-    public LectureDetailsDTO updateLecture(Long lectureId, LectureDetailsDTO lectureDetailsDTO) {
+    // 강의 수정
+    public LectureDetailsDTO updateLecture(Long lectureId, LectureDetailsDTO lectureDetailsDTO, List<MultipartFile> files) {
         // 현재 강의 가져오기
         Lecture currentLecture = lectureRepository.findById(lectureId)
                 .orElseThrow(() -> new EntityNotFoundException("Lecture not found"));
 
         // 강의 정보 업데이트
         currentLecture.setTitle(lectureDetailsDTO.getTitle());
+        currentLecture.setTag(lectureDetailsDTO.getTag());
         currentLecture.setComment(lectureDetailsDTO.getComment());
         currentLecture.setUpdateDate(LocalDateTime.now());
 
         // 기존 비디오 가져오기
         List<Video> existingVideos = currentLecture.getVideos();
 
-        // 비디오 업데이트 및 삭제 처리
-        for (Video existingVideo : existingVideos) {
-            boolean found = false;
+        // 요청 비디오 목록
+        List<VideoDTO.Response> requestedVideos = lectureDetailsDTO.getVideos();
 
-            for (VideoDTO.Response requestVideo : lectureDetailsDTO.getVideos()) {
-                if (existingVideo.getVideoOrder() == requestVideo.getVideoOrder()) {
-                    // 비디오가 요청에 있으면 업데이트
-                    existingVideo.setTitle(requestVideo.getTitle());
-                    existingVideo.setContent(requestVideo.getContent());
-                    existingVideo.setRunningTime(requestVideo.getRunningTime());
-                    found = true;
-                    break;
-                }
+        // 비디오 맵 생성 (videoId -> Video)
+        Map<Long, Video> existingVideoMap = existingVideos.stream()
+                .collect(Collectors.toMap(Video::getVideoId, video -> video));
+
+        // 업데이트 및 추가된 비디오 처리
+        for (int i = 0; i < requestedVideos.size(); i++) {
+            VideoDTO.Response requestVideo = requestedVideos.get(i);
+            Video video = existingVideoMap.getOrDefault(requestVideo.getVideoId(), new Video());
+
+            video.setVideoOrder(i + 1);
+            video.setTitle(requestVideo.getTitle());
+            video.setLecture(currentLecture);
+            video.setUploadDate(LocalDateTime.now());
+
+            if (files != null && !files.isEmpty() && files.get(i) != null && !files.get(i).isEmpty()) {
+                MultipartFile videoFile = files.get(i);
+                String videoUrl = s3Service.uploadFile(videoFile);
+                int duration = s3Service.getVideoDuration(videoFile);
+                video.setContent(videoUrl);
+                video.setRunningTime(duration);
+            } else {
+                video.setRunningTime(requestVideo.getRunningTime());
             }
 
-            // 요청에 없는 비디오는 삭제 처리
-            if (!found) {
-                existingVideo.setVideoOrder(-1); // 삭제로 표시
-                existingVideo.setDel(DeleteStatus.DELETED); // 상태 변경
-                existingVideo.setDeleteDate(LocalDateTime.now()); // 삭제 날짜 설정
-                videoRepository.save(existingVideo); // 변경 사항 저장
+            existingVideoMap.put(video.getVideoId(), video);
+        }
+
+        // 요청에 없는 비디오는 삭제 처리
+        for (Video existingVideo : existingVideos) {
+            if (requestedVideos.stream().noneMatch(video -> Objects.equals(video.getVideoId(), existingVideo.getVideoId()))) {
+                existingVideo.setDel(DeleteStatus.DELETED);
+                existingVideo.setDeleteDate(LocalDateTime.now());
+                s3Service.deleteFile(existingVideo.getContent());
             }
         }
 
-        // 새 비디오 추가
-        List<Video> newVideos = lectureDetailsDTO.getVideos().stream()
-                .filter(requestVideo -> existingVideos.stream()
-                        .noneMatch(existingVideo -> existingVideo.getVideoOrder() == requestVideo.getVideoOrder()))
-                .map(requestVideo -> {
-                    Video video = new Video();
-                    video.setVideoOrder(requestVideo.getVideoOrder());
-                    video.setTitle(requestVideo.getTitle());
-                    video.setContent(requestVideo.getContent());
-                    video.setRunningTime(requestVideo.getRunningTime());
-                    video.setUploadDate(LocalDateTime.now()); // 업로드 날짜 설정
-                    video.setLecture(currentLecture); // 강의에 연결
-                    return video;
-                })
-                .collect(Collectors.toList());
-
-        videoRepository.saveAll(newVideos); // 새 비디오 저장
+        // 비디오 업데이트 및 추가
+        videoRepository.saveAll(existingVideoMap.values());
 
         // 강의 업데이트
-        lectureRepository.save(currentLecture); // 강의 업데이트
+        lectureRepository.save(currentLecture);
 
-        return convertToDetailsDTO(currentLecture); // LectureInfoDTO 반환
+        return convertToDetailsDTO(currentLecture);
     }
+
+
 
     // Lecture -> LectureListDTO 변환
     private LectureListDTO convertToListDTO(Lecture lecture) {
@@ -193,8 +198,7 @@ public class LectureService {
                 .mapToInt(Video::getRunningTime)
                 .sum();
         // 초 단위로 합산된 시간을 시, 분, 초로 변환
-        LocalTime totalRunningTime = LocalTime.ofSecondOfDay(totalSeconds);
-        lectureDTO.setTotalRunningTime(totalRunningTime);
+        lectureDTO.setTotalRunningTime(totalSeconds);
 
         lectureDTO.setUserId(lecture.getUser().getUserId());
 
@@ -241,11 +245,12 @@ public class LectureService {
         // 강의에 관련된 비디오들 가져오기
         List<Video> videos = videoRepository.findByLecture(lecture);
 
-        // 비디오 상태 변경
+        // 비디오 상태 변경 및 S3에서 파일 삭제
         for (Video video : videos) {
             if (video.getDel() == DeleteStatus.ACTIVE) {
                 video.setDel(DeleteStatus.DELETED);
                 video.setDeleteDate(LocalDateTime.now());
+                s3Service.deleteFile(video.getContent()); // S3에서 파일 삭제
             }
         }
 

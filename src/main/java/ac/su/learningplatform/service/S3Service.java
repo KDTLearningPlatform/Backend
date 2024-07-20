@@ -63,4 +63,15 @@ public class S3Service {
         }
         return 0;
     }
+
+    public void deleteFile(String fileUrl) {
+        try {
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+            amazonS3.deleteObject(bucketName, fileName);
+            log.info("File deleted successfully: " + fileName);
+        } catch (Exception e) {
+            log.error("Error deleting file from S3", e);
+            throw new RuntimeException(e);
+        }
+    }
 }
