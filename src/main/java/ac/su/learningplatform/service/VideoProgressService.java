@@ -12,6 +12,7 @@ public class VideoProgressService {
     @Autowired
     private UserVideoProgressRepository userVideoProgressRepository;
 
+    // 비디오 시청 진행률을 업데이트하는 메소드
     public VideoProgressDTO updateVideoProgress(Long userId, Long videoId, int watchTime) {
         UserVideoProgress userVideoProgress = userVideoProgressRepository.findByUser_UserIdAndVideo_VideoId(userId, videoId)
                 .orElse(new UserVideoProgress(userId, videoId));

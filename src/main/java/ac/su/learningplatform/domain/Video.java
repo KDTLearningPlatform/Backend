@@ -14,7 +14,7 @@ import java.util.List;
 public class Video {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_id")   // 비디오 ID
+    @Column(name = "video_Id")   // 비디오 ID, video_id->Id
     private Long videoId;
 
     @Column(name="video_order")   // 순서(강의 내 순서)

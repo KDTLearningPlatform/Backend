@@ -54,4 +54,12 @@ public class Lecture {
     @OneToMany(mappedBy = "lecture")
     private List<UserLectureProgress> userLectureProgresses;
 
+    public String getTotalDuration() {
+        int totalSeconds = videos.stream().mapToInt(Video::getRunningTime).sum();
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        return String.format("%d시간 %d분", hours, minutes);
+    }
+
+
 }
