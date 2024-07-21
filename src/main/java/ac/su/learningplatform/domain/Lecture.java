@@ -60,6 +60,4 @@ public class Lecture {
         int minutes = (totalSeconds % 3600) / 60;
         return String.format("%d시간 %d분", hours, minutes);
     }
-
-
 }

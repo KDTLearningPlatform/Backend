@@ -33,5 +33,10 @@ public class LectureProgressController {
     public List<LectureProgressDTO> getInProgressLectures(@PathVariable Long userId) {
         return lectureProgressService.getInProgressLectures(userId);
     }
+
+//    @GetMapping("/completed/{userId}")
+//    public List<LectureProgressDTO> getCompletedLectures(@PathVariable Long userId) {
+//        return lectureProgressService.getCompletedLectures(userId);
+//    }
 }
 

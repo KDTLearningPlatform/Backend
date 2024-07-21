@@ -42,7 +42,9 @@ public class UserLectureProgress {
     public UserLectureProgress(Long userId, Long lectureId) {
         this.id = new UserLectureProgressId(userId, lectureId);
         this.user = new User();
+        this.user.setUserId(userId);
         this.lecture = new Lecture();
+        this.lecture.setLectureId(lectureId);
         this.progress = 0;
         this.watchedCount = 0;
     }
