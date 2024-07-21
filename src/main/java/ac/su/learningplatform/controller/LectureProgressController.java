@@ -1,5 +1,6 @@
 package ac.su.learningplatform.controller;
 
+import ac.su.learningplatform.dto.LectureCompletedDTO;
 import ac.su.learningplatform.dto.LectureProgressDTO;
 import ac.su.learningplatform.service.LectureProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +35,10 @@ public class LectureProgressController {
         return lectureProgressService.getInProgressLectures(userId);
     }
 
-//    @GetMapping("/completed/{userId}")
-//    public List<LectureProgressDTO> getCompletedLectures(@PathVariable Long userId) {
-//        return lectureProgressService.getCompletedLectures(userId);
-//    }
+    // 완료한 강의 목록을 반환하는 엔드포인트
+    @GetMapping("/completed/{userId}")
+    public List<LectureCompletedDTO> getCompletedLectures(@PathVariable Long userId) {
+        return lectureProgressService.getCompletedLectures(userId);
+    }
 }
 

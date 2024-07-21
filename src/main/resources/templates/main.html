@@ -3,13 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>Main Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .lecture-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .lecture-item {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+        }
+        .lecture-item:last-child {
+            border-bottom: none;
+        }
+        .lecture-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .lecture-details {
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
 <h1>메인 페이지</h1>
 <p>환영합니다, <span th:text="${name}">유저 이름</span>!</p>
 <p>이메일: <span th:text="${email}">이메일</span></p>
-<p>목표 강의 수: <span th:text="${goalVidCnt}">0</span></p>
-<p>오늘 시청한 강의 수: <span th:text="${dailyVidCnt}">0</span></p><p>이메일: <span th:text="${email}">이메일</span></p>
 <p>목표 강의 수: <span th:text="${goalVidCnt}">0</span></p>
 <p>오늘 시청한 강의 수: <span th:text="${dailyVidCnt}">0</span></p>
 <form th:action="@{/auth/logout}" method="post">
@@ -19,5 +45,41 @@
     <button type="submit">프로필 편집</button>
 </form>
 <a th:href="@{/api/lectures/createLecture}" class="button">강의/비디오 생성</a>
+
+<h2>전체 강의 목록</h2>
+<div class="lecture-container" id="lectureContainer">
+    <!-- 강의 목록이 여기에 동적으로 추가됩니다 -->
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('/api/lectures')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('강의 목록을 불러오는 중 오류가 발생했습니다.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const lectureContainer = document.getElementById('lectureContainer');
+                data.forEach(lecture => {
+                    const lectureItem = document.createElement('div');
+                    lectureItem.classList.add('lecture-item');
+                    lectureItem.innerHTML = `
+                        <a href="/api/lectures/details/${lecture.lectureId}" class="lecture-title">${lecture.title}</a>
+                        <div class="lecture-details">
+                            <p>태그: ${lecture.tag}</p>
+                            <p>총 비디오 수: ${lecture.totalVideoCount}</p>
+                            <p>참석 수: ${lecture.attendanceCount}</p>
+                        </div>
+                    `;
+                    lectureContainer.appendChild(lectureItem);
+                });
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+    });
+</script>
 </body>
 </html>

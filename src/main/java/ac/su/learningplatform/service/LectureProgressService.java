@@ -1,6 +1,7 @@
 package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.domain.*;
+import ac.su.learningplatform.dto.LectureCompletedDTO;
 import ac.su.learningplatform.dto.LectureProgressDTO;
 import ac.su.learningplatform.repository.LectureRepository;
 import ac.su.learningplatform.repository.UserLectureProgressRepository;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,16 +24,19 @@ public class LectureProgressService {
 
     @Autowired
     private LectureRepository lectureRepository;
+
     @Autowired
     private VideoRepository videoRepository;
 
     @Autowired
     public LectureProgressService(UserLectureProgressRepository userLectureProgressRepository,
                                   UserVideoProgressRepository userVideoProgressRepository,
-                                  LectureRepository lectureRepository) {
+                                  LectureRepository lectureRepository,
+                                  VideoRepository videoRepository) {
         this.userLectureProgressRepository = userLectureProgressRepository;
         this.userVideoProgressRepository = userVideoProgressRepository;
         this.lectureRepository = lectureRepository;
+        this.videoRepository = videoRepository;
     }
 
 
@@ -66,6 +69,25 @@ public class LectureProgressService {
             String totalDuration = lecture.getTotalDuration(); // 강의 총 시간을 계산하는 로직 필요
 
             return new LectureProgressDTO(lecture.getTag(), lecture.getTitle(), totalDuration, watchedVideos, totalVideos);
+        }).collect(Collectors.toList());
+    }
+
+    // 완료된 강의 목록을 반환하는 메소드
+    public List<LectureCompletedDTO> getCompletedLectures(Long userId) {
+        List<UserLectureProgress> completedLectures = userLectureProgressRepository.findByUser_UserIdAndProgressGreaterThanEqual(userId, 100);
+        return completedLectures.stream().map(userLectureProgress -> {
+            Lecture lecture = userLectureProgress.getLecture();
+            // 강의에 포함된 비디오들의 총 시간을 계산
+            int totalDuration = videoRepository.findByLecture(lecture).stream()
+                    .mapToInt(Video::getRunningTime)
+                    .sum();
+
+            return LectureCompletedDTO.builder()
+                    .lectureId(lecture.getLectureId())
+                    .title(lecture.getTitle())
+                    .tag(lecture.getTag())
+                    .totalDuration(totalDuration)
+                    .build();
         }).collect(Collectors.toList());
     }
 
