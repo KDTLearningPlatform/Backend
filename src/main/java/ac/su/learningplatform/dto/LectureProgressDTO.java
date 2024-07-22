@@ -20,52 +20,13 @@ public class LectureProgressDTO {
     public LectureProgressDTO() {}
 
     // 모든 필드를 매개변수로 받는 생성자
-    public LectureProgressDTO(String tag, String title, String totalDuration, int watchedVideos, int totalVideos) {
+    public LectureProgressDTO(Long lectureId, Long userId,String tag, String title, String totalDuration, int watchedVideos, int totalVideos) {
+        this.lectureId = lectureId;
+        this.userId = userId;
         this.tag = tag;
         this.title = title;
         this.totalDuration = totalDuration;
         this.watchedVideos = watchedVideos;
-        this.totalVideos = totalVideos;
-    }
-
-    // Getters and Setters
-    public String getTag() {
-        return tag;
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getTotalDuration() {
-        return totalDuration;
-    }
-
-    public void setTotalDuration(String totalDuration) {
-        this.totalDuration = totalDuration;
-    }
-
-    public int getWatchedVideos() {
-        return watchedVideos;
-    }
-
-    public void setWatchedVideos(int watchedVideos) {
-        this.watchedVideos = watchedVideos;
-    }
-
-    public int getTotalVideos() {
-        return totalVideos;
-    }
-
-    public void setTotalVideos(int totalVideos) {
         this.totalVideos = totalVideos;
     }
 }

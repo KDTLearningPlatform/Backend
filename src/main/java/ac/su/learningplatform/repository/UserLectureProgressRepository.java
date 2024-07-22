@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface UserLectureProgressRepository extends JpaRepository<UserLectureProgress, UserLectureProgressId> {
     Optional<UserLectureProgress> findById_UserIdAndId_LectureId(Long userId, Long lectureId);
     List<UserLectureProgress> findByUser_UserIdAndProgressGreaterThanEqual(Long userId, float progress);
+    List<UserLectureProgress> findByUser_UserIdAndProgressLessThan(Long userId, float progress);
 }

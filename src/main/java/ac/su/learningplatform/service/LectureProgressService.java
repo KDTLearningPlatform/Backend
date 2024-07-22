@@ -59,16 +59,26 @@ public class LectureProgressService {
         return lectureProgressDTO;
     }
 
-    // 진행중인 강의 목록을 반환하는 메소드
+    // 진행중인 강의 목록을 반환하는 메소드, 완
     public List<LectureProgressDTO> getInProgressLectures(Long userId) {
-        List<Lecture> lectures = lectureRepository.findAll();
-        return lectures.stream().map(lecture -> {
+        // 사용자가 진행중인 강의를 조회
+        List<UserLectureProgress> inProgressLectures = userLectureProgressRepository.findByUser_UserIdAndProgressLessThan(userId, 100);
+        return inProgressLectures.stream().map(userLectureProgress -> {
+            Lecture lecture = userLectureProgress.getLecture();
             List<UserVideoProgress> progressList = userVideoProgressRepository.findByUser_UserIdAndVideo_Lecture_LectureId(userId, lecture.getLectureId());
             int watchedVideos = progressList.size();
             int totalVideos = videoRepository.findByLecture(lecture).size();
             String totalDuration = lecture.getTotalDuration(); // 강의 총 시간을 계산하는 로직 필요
 
-            return new LectureProgressDTO(lecture.getTag(), lecture.getTitle(), totalDuration, watchedVideos, totalVideos);
+            return new LectureProgressDTO(
+                    lecture.getLectureId(),
+                    userId,
+                    lecture.getTag(),
+                    lecture.getTitle(),
+                    totalDuration,
+                    watchedVideos,
+                    totalVideos
+            );
         }).collect(Collectors.toList());
     }
 
