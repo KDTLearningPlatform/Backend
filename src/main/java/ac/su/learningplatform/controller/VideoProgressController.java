@@ -15,7 +15,7 @@ public class VideoProgressController {
     @Autowired
     private VideoProgressService videoProgressService;
 
-    // 비디오 시청 진행률을 업데이트하는 엔드포인트
+    // 비디오 시청 진행률을 업데이트하는 엔드포인트, api테스터시 로그인 화면나옴
     @PutMapping("/{userId}/{videoId}")
     public VideoProgressDTO updateVideoProgress(@PathVariable Long userId, @PathVariable Long videoId, @RequestParam int watchTime) {
         return videoProgressService.updateVideoProgress(userId, videoId, watchTime);
