@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <title>강의 상세 정보</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .lecture-details-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .video-item {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+        }
+        .video-item:last-child {
+            border-bottom: none;
+        }
+        .video-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .video-details {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1>강의 상세 정보</h1>
+<div class="lecture-details-container">
+    <h2 th:text="${lectureDetails.title}">강의 제목</h2>
+    <p th:text="${lectureDetails.comment}">강의 설명</p>
+    <p>태그: <span th:text="${lectureDetails.tag}">태그</span></p>
+    <p>총 비디오 수: <span th:text="${lectureDetails.totalVideoCount}">0</span></p>
+    <p>총 재생 시간: <span th:text="${lectureDetails.totalRunningTime}">0</span> 초</p>
+
+    <h3>비디오 목록</h3>
+    <div th:each="video : ${lectureDetails.videos}" class="video-item">
+        <div class="video-title" th:text="${video.title}">비디오 제목</div>
+        <div class="video-details">
+            <p>재생 시간: <span th:text="${video.runningTime}">0</span> 초</p>
+            <a th:href="${video.content}" target="_blank">비디오 링크</a>
+        </div>
+    </div>
+
+    <div th:if="${currentUserId == lectureUserId}" id="actionButtons">
+        <button onclick="editLecture()">강의 수정</button>
+        <button onclick="deleteLecture()">강의 삭제</button>
+    </div>
+</div>
+
+<script>
+    function editLecture() {
+        const lectureId = window.location.pathname.split('/').pop();
+        window.location.href = `/api/lectures/editLecture/${lectureId}`;
+    }
+
+    function deleteLecture() {
+        const lectureId = window.location.pathname.split('/').pop();
+        fetch(`/api/lectures/${lectureId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('강의 삭제 중 오류가 발생했습니다.');
+                }
+                alert('강의가 삭제되었습니다.');
+                window.location.href = '/auth/main';
+            })
+            .catch(error => {
+                alert('강의 삭제 중 오류가 발생했습니다.');
+            });
+    }
+</script>
+</body>
+</html>
