@@ -25,7 +25,7 @@ public class LectureProgressController {
         this.lectureProgressService = lectureProgressService;
     }
 
-    // 강의 진행률을 계산하는 엔드포인트
+    // 강의 진행률을 계산하는 엔드포인트, 로그인 화면으로 귀결
     @GetMapping("/{userId}/{lectureId}")
     public LectureProgressDTO getLectureProgress(@PathVariable Long userId, @PathVariable Long lectureId) {
         return lectureProgressService.calculateLectureProgress(userId, lectureId);
@@ -43,7 +43,7 @@ public class LectureProgressController {
         return lectureProgressService.getCompletedLectures(userId);
     }
 
-    // 강의 진행률을 업데이트하는 엔드포인트
+    // 강의 진행률을 업데이트하는 엔드포인트, 로그인 화면으로 귀결
     @PostMapping("/update/{userId}/{lectureId}")
     public void updateLectureProgress(@PathVariable Long userId, @PathVariable Long lectureId,
                                       @RequestBody UserLectureProgressDTO dto) {
