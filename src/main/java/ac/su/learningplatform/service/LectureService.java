@@ -126,7 +126,7 @@ public class LectureService {
             video.setLecture(currentLecture);
             video.setUploadDate(LocalDateTime.now());
 
-            if (files != null && !files.isEmpty() && files.get(i) != null && !files.get(i).isEmpty()) {
+            if (files != null && i < files.size() && files.get(i) != null && !files.get(i).isEmpty()) {
                 MultipartFile videoFile = files.get(i);
                 String videoUrl = s3Service.uploadFile(videoFile);
                 int duration = s3Service.getVideoDuration(videoFile);
@@ -134,6 +134,9 @@ public class LectureService {
                 video.setRunningTime(duration);
             } else {
                 video.setRunningTime(requestVideo.getRunningTime());
+                if (requestVideo.getContent() != null && !requestVideo.getContent().isEmpty()) {
+                    video.setContent(requestVideo.getContent());
+                }
             }
 
             existingVideoMap.put(video.getVideoId(), video);
@@ -156,8 +159,6 @@ public class LectureService {
 
         return convertToDetailsDTO(currentLecture);
     }
-
-
 
     // Lecture -> LectureListDTO 변환
     private LectureListDTO convertToListDTO(Lecture lecture) {

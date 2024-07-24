@@ -4,6 +4,7 @@ import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.constant.Role;
 import ac.su.learningplatform.service.JwtService;
 import ac.su.learningplatform.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ public class AuthController {
             if (existingUser != null) {
                 String jwtToken = jwtService.generateToken(existingUser.getEmail());
                 session.setAttribute("jwtToken", jwtToken);
-                return new RedirectView("http://localhost:3000/profilecompletion");
+                return new RedirectView("http://localhost:3000/main");
             }
             session.setAttribute("oauth2User", oAuth2User);
             session.setAttribute("provider", provider);
@@ -152,56 +153,54 @@ public class AuthController {
     }
 
     @GetMapping("/editProfile")
-    public String editProfilePage(HttpSession session, Model model) {
+    public ResponseEntity<Map<String, Object>> editProfilePage(HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
         if (token == null) {
-            return "redirect:/auth/chooseSocialLogin";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
-        // JWT 토큰을 파싱하여 사용자 이메일을 추출
         String email = jwtService.extractUsername(token);
-
-        // 이메일로 사용자 정보 조회
         User user = userService.findByEmail(email);
 
-        // 사용자 정보를 모델에 추가
-        model.addAttribute("name", user.getName());
-        model.addAttribute("email", user.getEmail());
-        model.addAttribute("goalVidCnt", user.getGoalVidCnt());
-        model.addAttribute("nickname", user.getNickname());
-        model.addAttribute("profileImage", user.getProfileImage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("goalVidCnt", user.getGoalVidCnt());
+        response.put("nickname", user.getNickname());
+        response.put("profileImage", user.getProfileImage());
 
-        return "profileEdit";
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/updateProfile")
-    public String updateProfile(@RequestParam("nickname") String nickname,
-                                @RequestParam("goalVidCnt") int goalVidCnt,
-                                @RequestParam("profileImage") String profileImage,
-                                HttpSession session) {
+    public ResponseEntity<Map<String, String>> updateProfile(@RequestBody Map<String, Object> payload,
+                                                             HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
         if (token == null) {
-            return "redirect:/auth/chooseSocialLogin";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status", "redirect"));
         }
 
-        // JWT 토큰을 파싱하여 사용자 이메일을 추출
         String email = jwtService.extractUsername(token);
-
-        // 이메일로 사용자 정보 조회
         User user = userService.findByEmail(email);
 
-        // 사용자 정보 업데이트
+        String nickname = (String) payload.get("nickname");
+        int goalVidCnt = (Integer) payload.get("goalVidCnt");
+        String profileImage = (String) payload.get("profileImage");
+
         user.setNickname(nickname);
         user.setGoalVidCnt(goalVidCnt);
         user.setProfileImage(profileImage);
         userService.updateUser(user.getUserId(), user);
 
-        return "redirect:/auth/main";
+        return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpSession session) {
-        session.invalidate();
-        return ResponseEntity.ok(Map.of("status", "ok"));
+    public ResponseEntity<Map<String, String>> logout(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return ResponseEntity.ok(Map.of("status", "redirect"));
     }
 }
