@@ -1,6 +1,6 @@
 package ac.su.learningplatform.controller;
 
-import ac.su.learningplatform.domain.VideoDetailDTO;
+import ac.su.learningplatform.dto.VideoDetailDTO;
 import ac.su.learningplatform.dto.VideoProgressDTO;
 import ac.su.learningplatform.service.VideoProgressService;
 import org.springframework.beans.factory.annotation.Autowired;

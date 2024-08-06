@@ -1,4 +1,4 @@
-package ac.su.learningplatform.domain;
+package ac.su.learningplatform.dto;
 
 import lombok.Getter;
 import lombok.Setter;

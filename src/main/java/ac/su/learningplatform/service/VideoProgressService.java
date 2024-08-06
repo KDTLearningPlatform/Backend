@@ -1,6 +1,6 @@
 package ac.su.learningplatform.service;
 
-import ac.su.learningplatform.domain.VideoDetailDTO;
+import ac.su.learningplatform.dto.VideoDetailDTO;
 import ac.su.learningplatform.dto.VideoProgressDTO;
 import ac.su.learningplatform.domain.UserVideoProgress;
 import ac.su.learningplatform.repository.UserVideoProgressRepository;
