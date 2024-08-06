@@ -15,7 +15,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -32,11 +34,6 @@ public class LectureController {
         this.userService = userService;
     }
 
-    @GetMapping("/createLecture")
-    public String createLecturePage() {
-        return "createLecture";
-    }
-
     @GetMapping
     public ResponseEntity<List<LectureListDTO>> getAllLectures(
             @RequestParam(required = false) String tag,
@@ -46,66 +43,65 @@ public class LectureController {
     }
 
     @GetMapping("/details/{lectureId}")
-    public String lectureDetailsPage(@PathVariable Long lectureId, Model model, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> lectureDetailsPage(@PathVariable Long lectureId, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
         LectureDetailsDTO lectureDetails = lectureService.getLectureById(lectureId);
-        model.addAttribute("lectureDetails", lectureDetails);
+        response.put("lectureDetails", lectureDetails);
 
         String token = (String) session.getAttribute("jwtToken");
         if (token == null) {
-            return "redirect:/auth/chooseSocialLogin";
+            response.put("redirect", "/auth/chooseSocialLogin");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // JWT 토큰을 파싱하여 사용자 이메일을 추출
         String email = jwtService.extractUsername(token);
         if (email == null) {
-            model.addAttribute("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
-            return "lectureDetails";
+            response.put("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
-        // 이메일로 사용자 정보 조회
         User user = userService.findByEmail(email);
         if (user == null) {
-            model.addAttribute("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
-            return "lectureDetails";
+            response.put("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
-        model.addAttribute("currentUserId", user.getUserId());
-        model.addAttribute("lectureUserId", lectureDetails.getUserId());
+        response.put("currentUserId", user.getUserId());
+        response.put("lectureUserId", lectureDetails.getUserId());
 
-        return "lectureDetails";
+        return ResponseEntity.ok(response);
     }
+
     @GetMapping("/editLecture/{lectureId}")
-    public String editLecturePage(@PathVariable Long lectureId, Model model, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> editLecturePage(@PathVariable Long lectureId, HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
         if (token == null) {
-            return "redirect:/auth/chooseSocialLogin";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("redirect", "/auth/chooseSocialLogin"));
         }
 
-        // JWT 토큰을 파싱하여 사용자 이메일을 추출
         String email = jwtService.extractUsername(token);
         if (email == null) {
-            model.addAttribute("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
-            return "editLecture";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다."));
         }
 
-        // 이메일로 사용자 정보 조회
         User user = userService.findByEmail(email);
         if (user == null) {
-            model.addAttribute("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다.");
-            return "editLecture";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("errorMessage", "사용자 정보를 불러오는 중 오류가 발생했습니다."));
         }
 
-        // 강의 정보를 조회하여 모델에 추가
         LectureDetailsDTO lecture = lectureService.getLectureById(lectureId);
-        model.addAttribute("lecture", lecture);
+        if (lecture == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("errorMessage", "강의를 찾을 수 없습니다."));
+        }
 
-        // 사용자 정보를 모델에 추가
-        model.addAttribute("name", user.getName());
-        model.addAttribute("email", user.getEmail());
-        model.addAttribute("goalVidCnt", user.getGoalVidCnt());
-        model.addAttribute("dailyVidCnt", user.getDailyVidCnt());
+        Map<String, Object> response = new HashMap<>();
+        response.put("lecture", lecture);
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("goalVidCnt", user.getGoalVidCnt());
+        response.put("dailyVidCnt", user.getDailyVidCnt());
 
-        return "editLecture";
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{lectureId}")
