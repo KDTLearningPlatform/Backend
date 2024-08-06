@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id") // 댓글 ID
+    @Column(name = "comment_Id") // 댓글 ID, comment_id->Id
     private Long commentId;
 
     @Column(name = "content", nullable = false) // 내용

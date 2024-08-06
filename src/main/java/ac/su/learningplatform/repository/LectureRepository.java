@@ -15,4 +15,3 @@ public interface LectureRepository extends JpaRepository<Lecture, Long> {
 
     List<Lecture> findAllByDelOrderByAttendanceCountDesc(DeleteStatus del);
 }
-
