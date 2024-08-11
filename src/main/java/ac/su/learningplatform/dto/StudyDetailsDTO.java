@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudyDetailsDTO {
+    private Long studyId;
     private String title;
     private String field;
     private LocalDateTime createDate;

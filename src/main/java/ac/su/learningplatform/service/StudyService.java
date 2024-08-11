@@ -71,6 +71,7 @@ public class StudyService {
     // Study -> StudyListDTO 변환
     private StudyListDTO convertToDTO(Study study) {
         return new StudyListDTO(
+                study.getStudy_id(),
                 study.getTitle(),
                 study.getField(),
                 study.getComments().size(),
@@ -83,6 +84,7 @@ public class StudyService {
     private StudyDetailsDTO convertToDetailsDTO(Study study) {
 
         StudyDetailsDTO studyDTO = new StudyDetailsDTO();
+        studyDTO.setStudyId(study.getStudy_id());
         studyDTO.setTitle(study.getTitle());
         studyDTO.setField(study.getField());
         studyDTO.setCreateDate(study.getCreateDate());
