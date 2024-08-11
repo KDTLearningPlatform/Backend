@@ -4,6 +4,8 @@ import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.LectureDetailsDTO;
 import ac.su.learningplatform.dto.LectureListDTO;
 import ac.su.learningplatform.dto.LectureRequestDTO;
+import ac.su.learningplatform.exception.ForbiddenException;
+import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.JwtService;
 import ac.su.learningplatform.service.LectureService;
 import ac.su.learningplatform.service.UserService;
@@ -133,14 +135,47 @@ public class LectureController {
     public ResponseEntity<LectureDetailsDTO> updateLecture(
             @PathVariable Long lectureId,
             @RequestPart("lecture") LectureDetailsDTO lectureDetailsDTO,
-            @RequestPart("files") List<MultipartFile> files) {
-        LectureDetailsDTO updatedLecture = lectureService.updateLecture(lectureId, lectureDetailsDTO, files);
+            @RequestPart("files") List<MultipartFile> files,
+            HttpSession session) {
+
+        Long userId = authenticateUser(session); // 사용자 인증
+
+        verifyLectureOwner(lectureId, userId); // 강의 소유자 검증
+
+        // 강의 업데이트
+        LectureDetailsDTO updatedLecture = lectureService.updateLecture(lectureId, lectureDetailsDTO, files, userId);
         return new ResponseEntity<>(updatedLecture, HttpStatus.OK);
     }
 
     @DeleteMapping("/{lectureId}")
-    public ResponseEntity<Void> deleteLecture(@PathVariable Long lectureId) {
+    public ResponseEntity<Void> deleteLecture(@PathVariable Long lectureId, HttpSession session) {
+        Long userId = authenticateUser(session); // 사용자 인증
+
+        verifyLectureOwner(lectureId, userId); // 강의 소유자 검증
+
+        // 강의 삭제
         lectureService.deleteLecture(lectureId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    private Long authenticateUser(HttpSession session) {
+        String token = (String) session.getAttribute("jwtToken");
+
+        // JWT 토큰 유효성 검사
+        if (token == null || token.isEmpty()) {
+            throw new UnauthorizedException("Unauthorized access");
+        }
+
+        // 사용자 정보 추출
+        String email = jwtService.extractUsername(token);
+        User user = userService.findByEmail(email);
+        return user.getUserId(); // 사용자 ID 반환
+    }
+
+    private void verifyLectureOwner(Long lectureId, Long userId) {
+        if (!lectureService.isLectureOwner(lectureId, userId)) {
+            throw new ForbiddenException("수정 권한이 없습니다");
+        }
+    }
+
 }
