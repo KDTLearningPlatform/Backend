@@ -9,6 +9,7 @@ import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
 import ac.su.learningplatform.dto.StudyDTO;
 import ac.su.learningplatform.repository.CommentRepository;
+import ac.su.learningplatform.repository.LoveRepository; // 추가
 import ac.su.learningplatform.repository.StudyRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -18,24 +19,27 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 public class StudyService {
 
     private final StudyRepository studyRepository;
     private final CommentRepository commentRepository;
+    private final LoveRepository loveRepository; // 추가
 
-    public StudyService(StudyRepository studyRepository, CommentRepository commentRepository) {
+    public StudyService(StudyRepository studyRepository, CommentRepository commentRepository, LoveRepository loveRepository) {
         this.studyRepository = studyRepository;
         this.commentRepository = commentRepository;
+        this.loveRepository = loveRepository; // 추가
     }
 
     // 모든 게시물 조회
-    public List<StudyListDTO> getAllStudies() {
+    public List<StudyListDTO> getAllStudies(Long userId) { // userId 추가
         List<Study> studies = studyRepository.findAllByDelOrderByCreateDateDesc(DeleteStatus.ACTIVE);
 
+        // 생성일자를 기준으로 내림차순으로 정렬
         return studies.stream()
-                .map(this::convertToDTO)
+                .sorted(Comparator.comparing(Study::getCreateDate).reversed()) // 내림차순 정렬
+                .map(study -> convertToDTO(study, userId)) // userId 추가
                 .collect(Collectors.toList());
     }
 
@@ -76,20 +80,21 @@ public class StudyService {
     }
 
     // Study -> StudyListDTO 변환
-    private StudyListDTO convertToDTO(Study study) {
+    private StudyListDTO convertToDTO(Study study, Long userId) { // userId 추가
+        boolean liked = loveRepository.existsByUser_UserIdAndStudy_StudyId(userId, study.getStudyId()); // 좋아요 여부 체크
         return new StudyListDTO(
                 study.getStudyId(),
                 study.getTitle(),
                 study.getField(),
                 study.getComments().size(),
                 study.getCreateDate(),
-                study.getUser().getUserId()
+                study.getUser().getUserId(),
+                liked // 좋아요 여부 추가
         );
     }
 
     // Study -> StudyDetailsDTO 변환
     private StudyDetailsDTO convertToDetailsDTO(Study study) {
-
         StudyDetailsDTO studyDTO = new StudyDetailsDTO();
         studyDTO.setStudyId(study.getStudyId());
         studyDTO.setTitle(study.getTitle());
@@ -172,7 +177,7 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new EntityNotFoundException("Study not found"));
 
-        // 스터디의 작성자 ID와 사용자 ID가 일치하는지 확인 tue or false 반환
+        // 스터디의 작성자 ID와 사용자 ID가 일치하는지 확인 true or false 반환
         return study.getUser().getUserId().equals(userId);
     }
 }

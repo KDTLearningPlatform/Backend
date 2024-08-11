@@ -32,11 +32,42 @@ public class StudyController {
         this.userService = userService;
     }
 
+//    @GetMapping
+//    public ResponseEntity<List<StudyListDTO>> getAllStudies() {
+//        List<StudyListDTO> studies = studyService.getAllStudies();
+//        return new ResponseEntity<>(studies, HttpStatus.OK);
+//    }
+
+    // 스터디 목록 조회 (좋아요 여부 반환)
     @GetMapping
-    public ResponseEntity<List<StudyListDTO>> getAllStudies() {
-        List<StudyListDTO> studies = studyService.getAllStudies();
+    public ResponseEntity<List<StudyListDTO>> getAllStudies(HttpSession session) {
+        // JWT 토큰 추출
+        String token = (String) session.getAttribute("jwtToken");
+
+        // 토큰이 없거나 비어있으면 Unauthorized 에러 반환
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        // JWT 토큰에서 사용자 이메일 추출
+        String email = jwtService.extractUsername(token);
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        // 이메일을 통해 사용자 정보를 조회
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        // 사용자 ID를 얻어서 스터디 목록 조회
+        Long userId = user.getUserId();
+        List<StudyListDTO> studies = studyService.getAllStudies(userId);
+
         return new ResponseEntity<>(studies, HttpStatus.OK);
     }
+
 
     @GetMapping("/details/{studyId}")
     public ResponseEntity<Map<String, Object>> studyDetailsPage(@PathVariable Long studyId) {
