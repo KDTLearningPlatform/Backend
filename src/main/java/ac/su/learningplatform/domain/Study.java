@@ -48,4 +48,7 @@ public class Study {
     // 1:N 매핑
     @OneToMany(mappedBy = "study")
     private List<Comment> comments;
+
+    @OneToMany(mappedBy = "study")
+    private List<Love> Love;
 }
