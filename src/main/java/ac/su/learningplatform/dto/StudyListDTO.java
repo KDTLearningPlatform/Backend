@@ -18,4 +18,5 @@ public class StudyListDTO {
     private int commentCount;
     private LocalDateTime createDate;
     private Long userId;
+    private boolean liked; // 좋아요 여부 추가
 }
