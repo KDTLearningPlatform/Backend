@@ -7,7 +7,7 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class UserLectureProgressDTO {
+public class UserLectureRegisterDTO {
     private Long userId;
     private Long lectureId;
 }
