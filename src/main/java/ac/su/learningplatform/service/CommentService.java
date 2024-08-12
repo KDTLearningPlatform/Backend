@@ -106,4 +106,12 @@ public class CommentService {
                 comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
         );
     }
+
+    // 댓글 소유자 검증 메서드 추가
+    public boolean isCommentOwner(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+        return comment.getUser().getUserId().equals(userId);
+    }
 }
