@@ -4,7 +4,6 @@ import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.LectureDetailsDTO;
 import ac.su.learningplatform.dto.LectureListDTO;
 import ac.su.learningplatform.dto.LectureRequestDTO;
-import ac.su.learningplatform.exception.ForbiddenException;
 import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.JwtService;
 import ac.su.learningplatform.service.LectureService;
@@ -13,14 +12,12 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/lectures")
@@ -174,7 +171,7 @@ public class LectureController {
 
     private void verifyLectureOwner(Long lectureId, Long userId) {
         if (!lectureService.isLectureOwner(lectureId, userId)) {
-            throw new ForbiddenException("수정 권한이 없습니다");
+            throw new UnauthorizedException("수정 권한이 없습니다");
         }
     }
 

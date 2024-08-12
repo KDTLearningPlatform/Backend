@@ -1,5 +1,3 @@
-// 사용안함
-
 package ac.su.learningplatform.exception;
 
 import org.springframework.http.HttpStatus;

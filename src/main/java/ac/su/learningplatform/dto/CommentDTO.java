@@ -7,8 +7,8 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
 public class CommentDTO {
+
     @Getter
     @Setter
     @AllArgsConstructor
@@ -16,6 +16,7 @@ public class CommentDTO {
     public static class Request {
         private String content;
         private Long userId;
+        private Long parentCommentId; // 부모 댓글 ID 추가
     }
 
     @Getter
@@ -27,5 +28,6 @@ public class CommentDTO {
         private String content;
         private LocalDateTime createDate;
         private Long userId;
+        private Long parentCommentId; // 부모 댓글 ID 추가
     }
 }

@@ -1,8 +1,10 @@
 package ac.su.learningplatform.controller;
 
+import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
+import ac.su.learningplatform.service.CommentService;
 import ac.su.learningplatform.dto.StudyDTO;
 import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.JwtService;
@@ -23,13 +25,15 @@ import java.util.Map;
 public class StudyController {
 
     private final StudyService studyService;
+    private final CommentService commentService;
     private final JwtService jwtService;
     private final UserService userService;
 
-    public StudyController(StudyService studyService, JwtService jwtService, UserService userService) {
+    public StudyController(StudyService studyService, JwtService jwtService, UserService userService, CommentService commentService) {
         this.studyService = studyService;
         this.jwtService = jwtService;
         this.userService = userService;
+        this.commentService = commentService;
     }
 
 //    @GetMapping
@@ -160,6 +164,13 @@ public class StudyController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    // 새로운 댓글 목록 가져오기 엔드포인트 추가
+    @GetMapping("/{studyId}/comments")
+    public ResponseEntity<List<CommentDTO.Response>> getCommentsByStudyId(@PathVariable Long studyId) {
+        List<CommentDTO.Response> comments = commentService.getCommentsByStudyId(studyId);
+        return new ResponseEntity<>(comments, HttpStatus.OK);
+    }
+
     private Long authenticateUser(HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
 
@@ -187,5 +198,6 @@ public class StudyController {
         StudyDTO.Response studyDTO = studyService.getStudyById(studyId);
         return new ResponseEntity<>(studyDTO, HttpStatus.OK);
     }
+
 
 }
