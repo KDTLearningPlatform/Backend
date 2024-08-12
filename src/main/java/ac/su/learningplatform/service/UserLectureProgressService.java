@@ -1,8 +1,8 @@
 package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.domain.*;
-import ac.su.learningplatform.dto.LectureSummaryDTO;
-import ac.su.learningplatform.dto.UserLectureProgressDTO;
+import ac.su.learningplatform.dto.UserLectureDTO;
+import ac.su.learningplatform.dto.UserLectureRegisterDTO;
 import ac.su.learningplatform.repository.UserLectureProgressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class UserLectureProgressService {
         this.userLectureProgressRepository = userLectureProgressRepository;
     }
 
-    public UserLectureProgress registerLecture(UserLectureProgressDTO dto) {
+    public UserLectureProgress registerLecture(UserLectureRegisterDTO dto) {
         // User와 Lecture 객체를 생성하여 연결
         User user = new User();
         user.setUserId(dto.getUserId());
@@ -50,23 +50,23 @@ public class UserLectureProgressService {
 
 
     // 진행 중인 강의 목록 조회
-    public List<LectureSummaryDTO> getInProgressLectures(Long userId) {
+    public List<UserLectureDTO> getInProgressLectures(Long userId) {
         List<UserLectureProgress> progressList = userLectureProgressRepository.findByUserUserIdAndProgressLessThan(userId, 1.0f);
         return progressList.stream()
-                .map(this::convertToSummaryDTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     // 완료된 강의 목록 조회
-    public List<LectureSummaryDTO> getCompletedLectures(Long userId) {
+    public List<UserLectureDTO> getCompletedLectures(Long userId) {
         List<UserLectureProgress> progressList = userLectureProgressRepository.findByUserUserIdAndProgressEquals(userId, 1.0f);
         return progressList.stream()
-                .map(this::convertToSummaryDTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    // UserLectureProgress -> LectureSummaryDTO 변환
-    private LectureSummaryDTO convertToSummaryDTO(UserLectureProgress userLectureProgress) {
+    // UserLectureProgress -> UserLectureDTO 변환
+    private UserLectureDTO convertToDTO(UserLectureProgress userLectureProgress) {
         Lecture lecture = userLectureProgress.getLecture();
 
         // 비디오들의 총 러닝타임 계산
@@ -74,7 +74,7 @@ public class UserLectureProgressService {
                 .mapToInt(Video::getRunningTime)
                 .sum();
 
-        return new LectureSummaryDTO(
+        return new UserLectureDTO(
                 lecture.getLectureId(),
                 lecture.getTag(),
                 lecture.getTitle(),

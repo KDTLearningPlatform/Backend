@@ -2,17 +2,14 @@ package ac.su.learningplatform.controller;
 
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.domain.UserLectureProgress;
-import ac.su.learningplatform.dto.LectureSummaryDTO;
-import ac.su.learningplatform.dto.UserLectureProgressDTO;
-import ac.su.learningplatform.exception.ForbiddenException;
+import ac.su.learningplatform.dto.UserLectureDTO;
+import ac.su.learningplatform.dto.UserLectureRegisterDTO;
 import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.JwtService;
 import ac.su.learningplatform.service.UserLectureProgressService;
 import ac.su.learningplatform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
@@ -20,21 +17,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/lectureProgress")
-public class UserLectureProgressController {
+public class LectureProgressController {
 
     private final UserLectureProgressService userLectureProgressService;
     private final JwtService jwtService;
     private final UserService userService;
 
     @Autowired
-    public UserLectureProgressController(UserLectureProgressService userLectureProgressService, JwtService jwtService, UserService userService) {
+    public LectureProgressController(UserLectureProgressService userLectureProgressService, JwtService jwtService, UserService userService) {
         this.userLectureProgressService = userLectureProgressService;
         this.jwtService = jwtService;
         this.userService = userService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserLectureProgress> registerLecture(@RequestBody UserLectureProgressDTO dto, HttpSession session) {
+    public ResponseEntity<UserLectureProgress> registerLecture(@RequestBody UserLectureRegisterDTO dto, HttpSession session) {
         Long userId = authenticateUser(session);
         dto.setUserId(userId);
         UserLectureProgress userLectureProgress = userLectureProgressService.registerLecture(dto);
@@ -56,16 +53,16 @@ public class UserLectureProgressController {
     }
 
     @GetMapping("/in-progress")
-    public ResponseEntity<List<LectureSummaryDTO>> getInProgressLectures(HttpSession session) {
+    public ResponseEntity<List<UserLectureDTO>> getInProgressLectures(HttpSession session) {
         Long userId = authenticateUser(session);
-        List<LectureSummaryDTO> lectures = userLectureProgressService.getInProgressLectures(userId);
+        List<UserLectureDTO> lectures = userLectureProgressService.getInProgressLectures(userId);
         return ResponseEntity.ok(lectures);
     }
 
     @GetMapping("/completed")
-    public ResponseEntity<List<LectureSummaryDTO>> getCompletedLectures(HttpSession session) {
+    public ResponseEntity<List<UserLectureDTO>> getCompletedLectures(HttpSession session) {
         Long userId = authenticateUser(session);
-        List<LectureSummaryDTO> lectures = userLectureProgressService.getCompletedLectures(userId);
+        List<UserLectureDTO> lectures = userLectureProgressService.getCompletedLectures(userId);
         return ResponseEntity.ok(lectures);
     }
 
