@@ -18,7 +18,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 public class StudyService {
 
@@ -71,6 +70,7 @@ public class StudyService {
     // Study -> StudyListDTO 변환
     private StudyListDTO convertToDTO(Study study) {
         return new StudyListDTO(
+                study.getStudyId(),
                 study.getTitle(),
                 study.getField(),
                 study.getComments().size(),
@@ -83,6 +83,7 @@ public class StudyService {
     private StudyDetailsDTO convertToDetailsDTO(Study study) {
 
         StudyDetailsDTO studyDTO = new StudyDetailsDTO();
+        studyDTO.setStudyId(study.getStudyId());
         studyDTO.setTitle(study.getTitle());
         studyDTO.setField(study.getField());
         studyDTO.setCreateDate(study.getCreateDate());
@@ -100,9 +101,9 @@ public class StudyService {
                         comment.getCommentId(),
                         comment.getContent(),
                         comment.getCreateDate(),
-                        comment.getUser().getUserId()
-                        )
-                )
+                        comment.getUser().getUserId(),
+                        comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
+                ))
                 .collect(Collectors.toList())
         );
 
@@ -127,23 +128,22 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new EntityNotFoundException("Study not found"));
 
-        // 스터디
-        study.setDel(DeleteStatus.DELETED);
-        study.setDeleteDate(LocalDateTime.now());
+        // 스터디 삭제 처리
+        study.markAsDeleted();
 
-        // 댓글 데이터 가져오기
-        List<Comment> comments = commentRepository.findByStudy(study);
-
-        // 댓글 상태 변경
-        for (Comment comment : comments) {
-            if (comment.getDel() == DeleteStatus.ACTIVE) {
-                comment.setDel(DeleteStatus.DELETED);
-                comment.setDeleteDate(LocalDateTime.now());
-            }
-        }
-
-        // 변경사항저장
+        // 변경사항 저장
         studyRepository.save(study);
-        commentRepository.saveAll(comments);
+    }
+
+    // 스터디 게시글 복구
+    public void restoreStudy(Long studyId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new EntityNotFoundException("Study not found"));
+
+        // 스터디 복구 처리
+        study.restore();
+
+        // 변경사항 저장
+        studyRepository.save(study);
     }
 }

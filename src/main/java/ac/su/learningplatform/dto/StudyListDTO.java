@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudyListDTO {
+    private Long studyId;
     private String title;
     private String field;
     private int commentCount;

@@ -14,7 +14,7 @@ public class Study {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="study_id")  // 스터디 게시글 ID
-    private Long study_id;
+    private Long studyId;
 
     @Column(name="title", nullable = false)   // 제목
     private String title;
@@ -37,8 +37,6 @@ public class Study {
     @Enumerated(EnumType.STRING)
     @Column(name="del", nullable = false)  // 삭제여부
     private DeleteStatus del = DeleteStatus.ACTIVE; // 기본값은 ACTIVE
-    // 게시글이 삭제되면 Comment 테이블의 study_id에 해당하는 댓글도 삭제되어야 합니다. (deleteStatus를 ACTIVE에서 DELETE로 변경)
-    // 삭제된 게시글을 복구하는 기능을 확장할 때는, Study 테이블의 deleteDate와 Comment 테이브르이 deleteDate가 같은것을 모두 복구
 
     // N:1 매핑
     @ManyToOne
@@ -46,6 +44,30 @@ public class Study {
     private User user;
 
     // 1:N 매핑
-    @OneToMany(mappedBy = "study")
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
+
+    // 엔티티 삭제시 관련 댓글 상태 변경 메서드
+    public void markAsDeleted() {
+        this.del = DeleteStatus.DELETED;
+        this.deleteDate = LocalDateTime.now();
+        if (comments != null) {
+            for (Comment comment : comments) {
+                comment.setDel(DeleteStatus.DELETED);
+                comment.setDeleteDate(this.deleteDate);
+            }
+        }
+    }
+
+    // 엔티티 복구시 관련 댓글 상태 변경 메서드
+    public void restore() {
+        this.del = DeleteStatus.ACTIVE;
+        this.deleteDate = null;
+        if (comments != null) {
+            for (Comment comment : comments) {
+                comment.setDel(DeleteStatus.ACTIVE);
+                comment.setDeleteDate(null);
+            }
+        }
+    }
 }
