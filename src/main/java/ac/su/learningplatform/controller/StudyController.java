@@ -4,7 +4,6 @@ import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
-import ac.su.learningplatform.dto.StudyRequestDTO;
 import ac.su.learningplatform.service.CommentService;
 import ac.su.learningplatform.dto.StudyDTO;
 import ac.su.learningplatform.exception.UnauthorizedException;
