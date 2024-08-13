@@ -47,18 +47,19 @@ public class CommentDepthService {
         newComment.setStudy(study);
         newComment.setUser(user);
 
-        Comment savedComment = commentRepository.save(newComment);
-
         if (commentRequest.getParentCommentId() != null) {
             Comment parentComment = commentRepository.findById(commentRequest.getParentCommentId())
                     .orElseThrow(() -> new EntityNotFoundException("Parent comment not found: " + commentRequest.getParentCommentId()));
 
-            createCommentDepth(parentComment, savedComment);
+            newComment.setParentComment(parentComment);
+            commentRepository.save(newComment);
+            createCommentDepth(parentComment, newComment);
+        } else {
+            commentRepository.save(newComment);
+            createCommentDepth(newComment, newComment);
         }
 
-        createCommentDepth(savedComment, savedComment);
-
-        return convertToResponse(savedComment);
+        return convertToResponse(newComment);
     }
 
     private void createCommentDepth(Comment ancestor, Comment descendant) {
@@ -88,6 +89,7 @@ public class CommentDepthService {
         List<CommentDepth> commentDepths = commentDepthRepository.findByAncestorComment_Study_StudyIdOrderByDepthAsc(studyId);
         return commentDepths.stream()
                 .map(cd -> convertToResponse(cd.getDescendantComment()))
+                .distinct()
                 .collect(Collectors.toList());
     }
 
@@ -99,5 +101,35 @@ public class CommentDepthService {
                 comment.getUser().getUserId(),
                 comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
         );
+    }
+
+    @Transactional
+    public void deleteComment(Long commentId) {
+        // 댓글이 존재하는지 확인
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+        // CommentDepth에서 해당 댓글과 관련된 모든 관계 삭제
+        List<CommentDepth> commentDepths = commentDepthRepository.findByAncestorComment_CommentIdOrderByDepthAsc(commentId);
+        commentDepths.forEach(commentDepthRepository::delete);
+
+        // 댓글 삭제
+        commentRepository.delete(comment);
+    }
+
+    @Transactional
+    public CommentDTO.Response updateComment(Long commentId, CommentDTO.Request commentRequest) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+        comment.setContent(commentRequest.getContent());
+
+        User user = userRepository.findById(commentRequest.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        comment.setUser(user);
+
+        commentRepository.save(comment);
+
+        return convertToResponse(comment);
     }
 }

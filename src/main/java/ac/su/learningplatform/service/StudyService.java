@@ -158,19 +158,7 @@ public class StudyService {
         studyRepository.save(study);
     }
 
-    // 스터디 게시글 복구
-    public void restoreStudy(Long studyId) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new EntityNotFoundException("Study not found"));
-
-        // 스터디 복구 처리
-        study.restore();
-
-        // 변경사항 저장
-        studyRepository.save(study);
-    }
-
-    // 스터디 소유자 검증 메서드 추가
+       // 스터디 소유자 검증 메서드 추가
     public boolean isStudyOwner(Long studyId, Long userId) {
         // 스터디 ID로 스터디를 데이터베이스에서 조회
         Study study = studyRepository.findById(studyId)
