@@ -81,6 +81,9 @@ public class User {
     private List<Comment> comments;
 
     @OneToMany(mappedBy = "user")
+    private List<Love> Love;
+
+    @OneToMany(mappedBy = "user")
     private List<UserLectureProgress> userLectureProgresses;
 
     @OneToMany(mappedBy = "user")

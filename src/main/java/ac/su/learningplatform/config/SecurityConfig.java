@@ -23,7 +23,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/**","/auth/**", "/oauth2/**", "/css/**", "/js/**", "/api/lectureProgress/**", "/api/lectures/**", "/api/videoProgress/**", "/api/studies/**").permitAll()
+                                .requestMatchers("/api/**","/auth/**", "/oauth2/**", "/css/**", "/js/**", "/api/lectureProgress/**", "/api/lectures/**", "/api/videoProgress/**", "/api/studies/**", "/api/loves/**").permitAll()
                                 .requestMatchers("/auth/main").authenticated()
                                 .anyRequest().authenticated()
                 )

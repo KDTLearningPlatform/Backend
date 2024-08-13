@@ -95,7 +95,7 @@ public class LectureService {
 
     // 강의 수정
     // 강의 수정
-    public LectureDetailsDTO updateLecture(Long lectureId, LectureDetailsDTO lectureDetailsDTO, List<MultipartFile> files) {
+    public LectureDetailsDTO updateLecture(Long lectureId, LectureDetailsDTO lectureDetailsDTO, List<MultipartFile> files, Long currentUserId) {
         // 현재 강의 가져오기
         Lecture currentLecture = lectureRepository.findById(lectureId)
                 .orElseThrow(() -> new EntityNotFoundException("Lecture not found"));
@@ -260,6 +260,14 @@ public class LectureService {
         videoRepository.saveAll(videos);
     }
 
-    //
+    // 강의 소유자 검증 메서드 추가
+    public boolean isLectureOwner(Long lectureId, Long userId) {
+        // 강의 ID로 강의를 데이터베이스에서 조회
+        Lecture lecture = lectureRepository.findById(lectureId)
+                .orElseThrow(() -> new EntityNotFoundException("Lecture not found"));
+
+        // 강의 소유자의 ID와 요청된 사용자 ID를 비교하여 동일하면 true, 아니면 false 반환
+        return lecture.getUser().getUserId().equals(userId);
+    }
 
 }

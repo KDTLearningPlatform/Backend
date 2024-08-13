@@ -17,12 +17,12 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/auth")
@@ -202,5 +202,16 @@ public class AuthController {
             session.invalidate();
         }
         return ResponseEntity.ok(Map.of("status", "redirect"));
+    }
+
+    // jwt 토큰을 확인하기 위한 임시 Controller 추가
+    @GetMapping("/session-info")
+    public ResponseEntity<Map<String, String>> getSessionInfo(HttpSession session) {
+        Map<String, String> response = new HashMap<>();
+        String jwtToken = (String) session.getAttribute("jwtToken");
+
+        response.put("jwtToken", Objects.requireNonNullElse(jwtToken, "없음"));
+
+        return ResponseEntity.ok(response);
     }
 }

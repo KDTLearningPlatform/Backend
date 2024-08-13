@@ -6,11 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface UserLectureProgressRepository extends JpaRepository<UserLectureProgress, UserLectureProgressId> {
-    Optional<UserLectureProgress> findById_UserIdAndId_LectureId(Long userId, Long lectureId);
-    List<UserLectureProgress> findByUser_UserIdAndProgressGreaterThanEqual(Long userId, float progress);
-    List<UserLectureProgress> findByUser_UserIdAndProgressLessThan(Long userId, float progress);
+    List<UserLectureProgress> findByUserUserIdAndProgressLessThan(Long userId, float progress);
+
+    List<UserLectureProgress> findByUserUserIdAndProgressEquals(Long userId, float progress);
 }

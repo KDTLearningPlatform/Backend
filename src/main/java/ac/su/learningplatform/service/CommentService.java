@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -42,32 +44,36 @@ public class CommentService {
         comment.setContent(commentRequest.getContent());
         comment.setStudy(study);
         comment.setUser(user);
+        if (commentRequest.getParentCommentId() != null) {
+            Comment parentComment = commentRepository.findById(commentRequest.getParentCommentId())
+                    .orElseThrow(() -> new EntityNotFoundException("해당 ID의 부모 댓글을 찾을 수 없습니다: " + commentRequest.getParentCommentId()));
+            comment.setParentComment(parentComment);
+        }
 
         Comment savedComment = commentRepository.save(comment);
 
         return convertToResponse(savedComment);
     }
 
-    // 댓글 수정 (임시로직 / 로직 수정 목표)
+    // 댓글 수정
+    @Transactional
     public CommentDTO.Response updateComment(Long commentId, CommentDTO.Request commentRequest) {
-
-        // 댓글 찾기
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
 
-        // 댓글 내용 수정
         comment.setContent(commentRequest.getContent());
+
         User user = userRepository.findById(commentRequest.getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + commentRequest.getUserId()));
         comment.setUser(user);
 
         commentRepository.save(comment);
 
-        return convertToResponse(comment); // 댓글을 DTO 로 변환하여 반환
-
+        return convertToResponse(comment);
     }
 
     // 댓글 삭제
+    @Transactional
     public void deleteComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
@@ -76,16 +82,31 @@ public class CommentService {
         comment.setDeleteDate(LocalDateTime.now());
 
         commentRepository.save(comment);
-
     }
 
-    // CommentDTO.Request -> Comment 변환
+    // 특정 스터디의 모든 댓글 조회
+    @Transactional(readOnly = true)
+    public List<CommentDTO.Response> getCommentsByStudyId(Long studyId) {
+        List<Comment> comments = commentRepository.findByStudy_StudyIdAndDel(studyId, DeleteStatus.ACTIVE);
+        return comments.stream()
+                .map(comment -> new CommentDTO.Response(
+                        comment.getCommentId(),
+                        comment.getContent(),
+                        comment.getCreateDate(),
+                        comment.getUser().getUserId(),
+                        comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // Comment -> CommentDTO.Response 변환
     private CommentDTO.Response convertToResponse(Comment comment) {
         return new CommentDTO.Response(
                 comment.getCommentId(),
                 comment.getContent(),
                 comment.getCreateDate(),
-                comment.getUser().getUserId()
+                comment.getUser().getUserId(),
+                comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
         );
     }
 }

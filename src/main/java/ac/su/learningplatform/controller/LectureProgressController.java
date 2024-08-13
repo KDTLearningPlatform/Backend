@@ -1,55 +1,90 @@
 package ac.su.learningplatform.controller;
 
 import ac.su.learningplatform.domain.User;
-import ac.su.learningplatform.dto.LectureCompletedDTO;
-import ac.su.learningplatform.dto.LectureProgressDTO;
-import ac.su.learningplatform.dto.UserLectureProgressDTO;
+import ac.su.learningplatform.domain.UserLectureProgress;
+import ac.su.learningplatform.dto.UserLectureDTO;
+import ac.su.learningplatform.dto.UserLectureRegisterDTO;
+import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.JwtService;
-import ac.su.learningplatform.service.LectureProgressService;
 import ac.su.learningplatform.service.UserLectureProgressService;
-
+import ac.su.learningplatform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/lectureProgress")
-@Controller
 public class LectureProgressController {
-    private final LectureProgressService lectureProgressService;
-    @Autowired
-    private UserLectureProgressService service;
+
+    private final UserLectureProgressService userLectureProgressService;
+    private final JwtService jwtService;
+    private final UserService userService;
 
     @Autowired
-    public LectureProgressController(LectureProgressService lectureProgressService) {
-        this.lectureProgressService = lectureProgressService;
+    public LectureProgressController(UserLectureProgressService userLectureProgressService, JwtService jwtService, UserService userService) {
+        this.userLectureProgressService = userLectureProgressService;
+        this.jwtService = jwtService;
+        this.userService = userService;
     }
 
-    // 강의 진행률을 계산하는 엔드포인트, 로그인 화면으로 귀결
-    @GetMapping("/{userId}/{lectureId}")
-    public LectureProgressDTO getLectureProgress(@PathVariable Long userId, @PathVariable Long lectureId) {
-        return lectureProgressService.calculateLectureProgress(userId, lectureId);
+    @PostMapping("/register")
+    public ResponseEntity<UserLectureProgress> registerLecture(@RequestBody UserLectureRegisterDTO dto, HttpSession session) {
+        Long userId = authenticateUser(session);
+        dto.setUserId(userId);
+        UserLectureProgress userLectureProgress = userLectureProgressService.registerLecture(dto);
+        return ResponseEntity.ok(userLectureProgress);
     }
 
-    // 진행중인 강의 목록을 반환하는 엔드포인트, json 반환됨
-    @GetMapping("/in-progress/{userId}")
-    public List<LectureProgressDTO> getInProgressLectures(@PathVariable Long userId) {
-        return lectureProgressService.getInProgressLectures(userId);
+    @GetMapping("/is-registered/{lectureId}")
+    public ResponseEntity<Boolean> isLectureRegistered(@PathVariable Long lectureId, HttpSession session) {
+        Long userId = authenticateUser(session);
+        boolean isRegistered = userLectureProgressService.isLectureRegistered(userId, lectureId);
+        return ResponseEntity.ok(isRegistered);
     }
 
-    // 완료한 강의 목록을 반환하는 엔드포인트, 로그인 화면으로 감
-    @GetMapping("{userId}/completed")
-    public List<LectureCompletedDTO> getCompletedLectures(@PathVariable Long userId) {
-        return lectureProgressService.getCompletedLectures(userId);
+    @DeleteMapping("/unregister/{lectureId}")
+    public ResponseEntity<Void> unregisterLecture(@PathVariable Long lectureId, HttpSession session) {
+        Long userId = authenticateUser(session);
+        userLectureProgressService.unregisterLecture(userId, lectureId);
+        return ResponseEntity.noContent().build();
     }
 
-    // 강의 진행률을 업데이트하는 엔드포인트, 로그인 화면으로 귀결
-    @PostMapping("/update/{userId}/{lectureId}")
-    public void updateLectureProgress(@PathVariable Long userId, @PathVariable Long lectureId,
-                                      @RequestBody UserLectureProgressDTO dto) {
-        service.updateProgress(userId, lectureId, dto);
+    @GetMapping("/in-progress")
+    public ResponseEntity<List<UserLectureDTO>> getInProgressLectures(HttpSession session) {
+        Long userId = authenticateUser(session);
+        List<UserLectureDTO> lectures = userLectureProgressService.getInProgressLectures(userId);
+        return ResponseEntity.ok(lectures);
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<List<UserLectureDTO>> getCompletedLectures(HttpSession session) {
+        Long userId = authenticateUser(session);
+        List<UserLectureDTO> lectures = userLectureProgressService.getCompletedLectures(userId);
+        return ResponseEntity.ok(lectures);
+    }
+
+    private Long authenticateUser(HttpSession session) {
+        String token = (String) session.getAttribute("jwtToken");
+
+        // JWT 토큰 유효성 검사
+        if (token == null || token.isEmpty()) {
+            throw new UnauthorizedException("Unauthorized access");
+        }
+
+        // 사용자 정보 추출
+        String email = jwtService.extractUsername(token);
+        if (email == null) {
+            throw new UnauthorizedException("Invalid token");
+        }
+
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            throw new UnauthorizedException("User not found");
+        }
+
+        return user.getUserId(); // 사용자 ID 반환
     }
 }
-
