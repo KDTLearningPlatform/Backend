@@ -56,6 +56,7 @@ public class CommentService {
     }
 
     // 댓글 수정
+    @Transactional
     public CommentDTO.Response updateComment(Long commentId, CommentDTO.Request commentRequest) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
@@ -72,6 +73,7 @@ public class CommentService {
     }
 
     // 댓글 삭제
+    @Transactional
     public void deleteComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
@@ -83,6 +85,7 @@ public class CommentService {
     }
 
     // 특정 스터디의 모든 댓글 조회
+    @Transactional(readOnly = true)
     public List<CommentDTO.Response> getCommentsByStudyId(Long studyId) {
         List<Comment> comments = commentRepository.findByStudy_StudyIdAndDel(studyId, DeleteStatus.ACTIVE);
         return comments.stream()
