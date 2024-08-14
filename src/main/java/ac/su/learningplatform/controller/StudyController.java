@@ -4,12 +4,9 @@ import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
-import ac.su.learningplatform.service.CommentService;
+import ac.su.learningplatform.service.*;
 import ac.su.learningplatform.dto.StudyDTO;
 import ac.su.learningplatform.exception.UnauthorizedException;
-import ac.su.learningplatform.service.JwtService;
-import ac.su.learningplatform.service.StudyService;
-import ac.su.learningplatform.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +26,10 @@ public class StudyController {
     private final JwtService jwtService;
     private final UserService userService;
 
-    public StudyController(StudyService studyService, JwtService jwtService, UserService userService, CommentService commentService) {
+    public StudyController(StudyService studyService,
+                           JwtService jwtService,
+                           UserService userService,
+                           CommentService commentService) {
         this.studyService = studyService;
         this.jwtService = jwtService;
         this.userService = userService;
@@ -72,9 +72,11 @@ public class StudyController {
         return new ResponseEntity<>(studies, HttpStatus.OK);
     }
 
-
     @GetMapping("/details/{studyId}")
-    public ResponseEntity<Map<String, Object>> studyDetailsPage(@PathVariable Long studyId) {
+    public ResponseEntity<Map<String, Object>> studyDetailsPage(@PathVariable Long studyId, HttpSession session) {
+
+        authenticateUser(session);
+
         Map<String, Object> response = new HashMap<>();
         StudyDetailsDTO studyDetails = studyService.getStudyDetailsById(studyId);
         response.put("studyDetails", studyDetails);
