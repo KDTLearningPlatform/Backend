@@ -1,5 +1,7 @@
 package ac.su.learningplatform.service;
 
+import ac.su.learningplatform.domain.UserVideoProgressId;
+import ac.su.learningplatform.domain.Video;
 import ac.su.learningplatform.dto.VideoDetailDTO;
 import ac.su.learningplatform.dto.VideoProgressDTO;
 import ac.su.learningplatform.domain.UserVideoProgress;
@@ -14,11 +16,13 @@ import java.util.stream.Collectors;
 @Service
 public class VideoProgressService {
 
-    @Autowired
+    private final VideoRepository videoRepository;
     private final UserVideoProgressRepository userVideoProgressRepository;
 
     @Autowired
-    public VideoProgressService(UserVideoProgressRepository userVideoProgressRepository) {
+    public VideoProgressService(UserVideoProgressRepository userVideoProgressRepository,
+                                VideoRepository videoRepository) {
+        this.videoRepository = videoRepository;
         this.userVideoProgressRepository = userVideoProgressRepository;
     }
 
@@ -46,17 +50,25 @@ public class VideoProgressService {
         return videoProgressDTO;
     }
 
-//    // 강의의 비디오 목록을 반환하는 메소드
-//    public List<VideoDetailDTO> getLectureVideos(Long userId, Long lectureId) {
-//        return videoRepository.findByLecture_LectureId(lectureId).stream().map(video -> {
-//            UserVideoProgress progress = userVideoProgressRepository.findByUser_UserIdAndVideo_VideoId(userId, video.getVideoId()).orElse(new UserVideoProgress(userId, video.getVideoId()));
-//            VideoDetailDTO dto = new VideoDetailDTO();
-//            dto.setVideoId(video.getVideoId());
-//            dto.setTitle(video.getTitle());
-//            dto.setTotalDuration(video.getRunningTime());
-//            dto.setWatchedDuration(progress.getWatchTime());
-//            dto.setProgress(progress.getProgress());
-//            return dto;
-//        }).collect(Collectors.toList());
-//    }
+    //08.14추가
+    public List<VideoDetailDTO> getLectureVideos(Long userId, Long lectureId) {
+        List<Video> videos = videoRepository.findByLecture_LectureId(lectureId);
+        return videos.stream()
+                .map(video -> {
+                    UserVideoProgressId id = new UserVideoProgressId(userId, video.getVideoId());
+                    UserVideoProgress userVideoProgress = userVideoProgressRepository.findById(id).orElse(null);
+
+                    int watchedDuration = (userVideoProgress != null) ? userVideoProgress.getWatchTime() : 0;
+                    float progress = (userVideoProgress != null) ? userVideoProgress.getProgress() : 0;
+
+                    return new VideoDetailDTO(
+                            video.getVideoId(),
+                            video.getTitle(),
+                            video.getRunningTime(),
+                            watchedDuration,
+                            progress
+                    );
+                })
+                .collect(Collectors.toList());
+    }
 }

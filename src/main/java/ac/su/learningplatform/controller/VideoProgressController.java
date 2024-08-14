@@ -30,9 +30,9 @@ public class VideoProgressController {
         return ResponseEntity.ok(videoProgressDTO);
     }
 
-//    // 강의의 비디오 목록을 반환하는 엔드포인트
-//    @GetMapping("/{userId}/lecture/{lectureId}/videos")
-//    public List<VideoDetailDTO> getLectureVideos(@PathVariable Long userId, @PathVariable Long lectureId) {
-//        return videoProgressService.getLectureVideos(userId, lectureId);
-//    }
+   // 강의의 비디오 목록을 반환하는 엔드포인트
+    @GetMapping("/{userId}/lecture/{lectureId}/videos")
+    public List<VideoDetailDTO> getLectureVideos(@PathVariable Long userId, @PathVariable Long lectureId) {
+        return videoProgressService.getLectureVideos(userId, lectureId);
+    }
 }
