@@ -1,10 +1,9 @@
 package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.constant.DeleteStatus;
-import ac.su.learningplatform.domain.Comment;
-import ac.su.learningplatform.domain.Study;
-import ac.su.learningplatform.domain.User;
+import ac.su.learningplatform.domain.*;
 import ac.su.learningplatform.dto.CommentDTO;
+import ac.su.learningplatform.repository.CommentDepthRepository;
 import ac.su.learningplatform.repository.CommentRepository;
 import ac.su.learningplatform.repository.StudyRepository;
 import ac.su.learningplatform.repository.UserRepository;
@@ -20,13 +19,16 @@ import java.util.stream.Collectors;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final CommentDepthRepository commentDepthRepository;
     private final StudyRepository studyRepository;
     private final UserRepository userRepository;
 
     public CommentService(CommentRepository commentRepository,
+                          CommentDepthRepository commentDepthRepository,
                           StudyRepository studyRepository,
                           UserRepository userRepository) {
         this.commentRepository = commentRepository;
+        this.commentDepthRepository = commentDepthRepository;
         this.studyRepository = studyRepository;
         this.userRepository = userRepository;
     }
@@ -34,25 +36,63 @@ public class CommentService {
     // 댓글 생성
     @Transactional
     public CommentDTO.Response createComment(Long studyId, CommentDTO.Request commentRequest) {
+        // 스터디 ID로 스터디 객체를 찾음. 없으면 예외 발생
         Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 스터디를 찾을 수 없습니다: " + studyId));
+                .orElseThrow(() -> new EntityNotFoundException("Study not found"));
 
+        // 사용자 ID로 사용자 객체를 찾음. 없으면 예외 발생
         User user = userRepository.findById(commentRequest.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 사용자를 찾을 수 없습니다: " + commentRequest.getUserId()));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        Comment comment = new Comment();
-        comment.setContent(commentRequest.getContent());
-        comment.setStudy(study);
-        comment.setUser(user);
+        // 새로운 댓글 객체 생성 및 초기화
+        Comment newComment = new Comment();
+        newComment.setContent(commentRequest.getContent());
+        newComment.setCreateDate(LocalDateTime.now());
+        newComment.setStudy(study);
+        newComment.setUser(user);
+
+        // 댓글 저장
+        Comment savedComment = commentRepository.save(newComment);
+
+        // 부모 댓글이 있을 경우 부모 댓글과의 관계를 저장
         if (commentRequest.getParentCommentId() != null) {
             Comment parentComment = commentRepository.findById(commentRequest.getParentCommentId())
-                    .orElseThrow(() -> new EntityNotFoundException("해당 ID의 부모 댓글을 찾을 수 없습니다: " + commentRequest.getParentCommentId()));
-            comment.setParentComment(parentComment);
+                    .orElseThrow(() -> new EntityNotFoundException("Parent comment not found: " + commentRequest.getParentCommentId()));
+
+            createCommentDepth(parentComment, savedComment);
         }
 
-        Comment savedComment = commentRepository.save(comment);
+        // 자기 자신과의 관계를 저장 (루트 댓글일 경우)
+        createCommentDepth(savedComment, savedComment);
 
+        // 저장된 댓글을 응답 DTO로 변환하여 반환
         return convertToResponse(savedComment);
+    }
+
+    // 댓글 사이의 깊이 관계를 저장하는 메소드
+    private void createCommentDepth(Comment ancestor, Comment descendant) {
+        // CommentDepth 객체 생성 및 초기화
+        CommentDepth commentDepth = new CommentDepth();
+        commentDepth.setId(new CommentDepthId(ancestor.getCommentId(), descendant.getCommentId()));
+        commentDepth.setAncestorComment(ancestor);
+        commentDepth.setDescendantComment(descendant);
+        commentDepth.setDepth(ancestor.equals(descendant) ? 0 : 1); // 루트 댓글이면 깊이 0, 자식 댓글이면 깊이 1
+
+        // 깊이 정보 저장
+        commentDepthRepository.save(commentDepth);
+
+        // 부모 댓글과의 관계가 있는 경우, 그 관계에 따른 추가 깊이 정보 저장
+        if (!ancestor.equals(descendant)) {
+            List<CommentDepth> ancestorDepths = commentDepthRepository.findByAncestorComment_CommentIdOrderByDepthAsc(ancestor.getCommentId());
+            for (CommentDepth depth : ancestorDepths) {
+                CommentDepth newDepth = new CommentDepth();
+                newDepth.setId(new CommentDepthId(depth.getAncestorComment().getCommentId(), descendant.getCommentId()));
+                newDepth.setAncestorComment(depth.getAncestorComment());
+                newDepth.setDescendantComment(descendant);
+                newDepth.setDepth(depth.getDepth() + 1); // 부모 댓글의 깊이에 1을 더함
+                commentDepthRepository.save(newDepth);
+            }
+        }
     }
 
     // 댓글 수정

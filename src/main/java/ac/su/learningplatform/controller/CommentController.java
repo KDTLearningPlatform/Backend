@@ -20,18 +20,20 @@ public class CommentController {
     private final UserService userService;
 
 
-    public CommentController(CommentService commentService, JwtService jwtService, UserService userService) {
+    public CommentController(CommentService commentService,
+                             JwtService jwtService,
+                             UserService userService) {
         this.commentService = commentService;
         this.jwtService = jwtService;
         this.userService = userService;
     }
 
-    @PostMapping("/api/studies/{studyId}/comments")
+    // 댓글 생성
+    @PostMapping("/api/comments")
     public ResponseEntity<CommentDTO.Response> createComment(
-            @PathVariable Long studyId,
             @RequestBody CommentDTO.Request commentRequest,
-            HttpSession session)
-    {
+            @RequestParam Long studyId,
+            HttpSession session) {
 
         String token = (String) session.getAttribute("jwtToken");
 
@@ -48,6 +50,7 @@ public class CommentController {
         return new ResponseEntity<>(createdCommentDTO, HttpStatus.CREATED);
     }
 
+    // 댓글 수정
     @PutMapping("/api/comments/{commentId}")
     public ResponseEntity<CommentDTO.Response> updateComment(
             @PathVariable Long commentId,
@@ -62,6 +65,7 @@ public class CommentController {
         return new ResponseEntity<>(updatedCommentDTO, HttpStatus.OK);
     }
 
+    // 댓글 삭제
     @DeleteMapping("/api/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long commentId,
