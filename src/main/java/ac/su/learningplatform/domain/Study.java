@@ -65,27 +65,4 @@ public class Study {
     @OneToMany(mappedBy = "study")
     private List<Love> Love;
 
-    // 엔티티 삭제시 관련 댓글 상태 변경 메서드
-    public void markAsDeleted() {
-        this.del = DeleteStatus.DELETED;
-        this.deleteDate = LocalDateTime.now();
-        if (comments != null) {
-            for (Comment comment : comments) {
-                comment.setDel(DeleteStatus.DELETED);
-                comment.setDeleteDate(this.deleteDate);
-            }
-        }
-    }
-
-    // 엔티티 복구시 관련 댓글 상태 변경 메서드
-    public void restore() {
-        this.del = DeleteStatus.ACTIVE;
-        this.deleteDate = null;
-        if (comments != null) {
-            for (Comment comment : comments) {
-                comment.setDel(DeleteStatus.ACTIVE);
-                comment.setDeleteDate(null);
-            }
-        }
-    }
 }

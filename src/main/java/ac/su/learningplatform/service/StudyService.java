@@ -8,8 +8,7 @@ import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
 import ac.su.learningplatform.dto.StudyDTO;
-import ac.su.learningplatform.repository.CommentRepository;
-import ac.su.learningplatform.repository.LoveRepository; // 추가
+import ac.su.learningplatform.repository.LoveRepository;
 import ac.su.learningplatform.repository.StudyRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -23,12 +22,10 @@ import java.util.stream.Collectors;
 public class StudyService {
 
     private final StudyRepository studyRepository;
-    private final CommentRepository commentRepository;
     private final LoveRepository loveRepository; // 추가
 
-    public StudyService(StudyRepository studyRepository, CommentRepository commentRepository, LoveRepository loveRepository) {
+    public StudyService(StudyRepository studyRepository, LoveRepository loveRepository) {
         this.studyRepository = studyRepository;
-        this.commentRepository = commentRepository;
         this.loveRepository = loveRepository; // 추가
     }
 
@@ -152,13 +149,43 @@ public class StudyService {
                 .orElseThrow(() -> new EntityNotFoundException("Study not found"));
 
         // 스터디 삭제 처리
-        study.markAsDeleted();
+        study.setDel(DeleteStatus.DELETED);
+        study.setDeleteDate(LocalDateTime.now());
+
+        // 엔티티 삭제시 관련 댓글 상태 변경
+        if (study.getComments() != null) {
+            for (Comment comment : study.getComments()) {
+                comment.setDel(DeleteStatus.DELETED);
+                comment.setDeleteDate(study.getDeleteDate());
+            }
+        }
 
         // 변경사항 저장
         studyRepository.save(study);
     }
 
-       // 스터디 소유자 검증 메서드 추가
+    // 스터디 게시글 복구
+    public void restoreStudy(Long studyId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new EntityNotFoundException("Study not found"));
+
+        // 스터디 복구 처리
+        study.setDel(DeleteStatus.ACTIVE);
+        study.setDeleteDate(null);
+
+        // 엔티티 복구시 관련 댓글 상태 변경
+        if (study.getComments() != null) {
+            for (Comment comment : study.getComments()) {
+                comment.setDel(DeleteStatus.ACTIVE);
+                comment.setDeleteDate(null);
+            }
+        }
+
+        // 변경사항 저장
+        studyRepository.save(study);
+    }
+
+    // 스터디 소유자 검증 메서드 추가
     public boolean isStudyOwner(Long studyId, Long userId) {
         // 스터디 ID로 스터디를 데이터베이스에서 조회
         Study study = studyRepository.findById(studyId)
