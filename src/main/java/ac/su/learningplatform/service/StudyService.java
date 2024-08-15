@@ -29,7 +29,7 @@ public class StudyService {
         this.loveRepository = loveRepository; // 추가
     }
 
-    // 모든 게시물 조회
+    // 모든 게시글 조회
     public List<StudyListDTO> getAllStudies(Long userId) { // userId 추가
         List<Study> studies = studyRepository.findAllByDelOrderByCreateDateDesc(DeleteStatus.ACTIVE);
 
@@ -40,17 +40,10 @@ public class StudyService {
                 .collect(Collectors.toList());
     }
 
-    // 스터디 게시글 정보 조회
-    public StudyDTO.Response getStudyById(Long studyId) {
-        return studyRepository.findById(studyId)
-                .map(this::convertToStudyResponseDTO)
-                .orElse(null);
-    }
-
     // 특정 스터디 게시글의 세부정보 조회 (댓글포함)
-    public StudyDetailsDTO getStudyDetailsById(Long studyId) {
+    public StudyDetailsDTO getStudyDetailsById(Long studyId, Long userId) {
         return studyRepository.findById(studyId)
-                .map(this::convertToDetailsDTO)
+                .map(study -> convertToDetailsDTO(study, userId))
                 .orElse(null);
     }
 
@@ -91,13 +84,15 @@ public class StudyService {
     }
 
     // Study -> StudyDetailsDTO 변환
-    private StudyDetailsDTO convertToDetailsDTO(Study study) {
+    private StudyDetailsDTO convertToDetailsDTO(Study study, Long userId) { // userId 추가
+        boolean liked = loveRepository.existsByUser_UserIdAndStudy_StudyId(userId, study.getStudyId()); // 좋아요 여부 체크
         StudyDetailsDTO studyDTO = new StudyDetailsDTO();
         studyDTO.setStudyId(study.getStudyId());
         studyDTO.setTitle(study.getTitle());
         studyDTO.setField(study.getField());
         studyDTO.setCreateDate(study.getCreateDate());
         studyDTO.setUserId(study.getUser().getUserId());
+        studyDTO.setLiked(liked);
 
         // 삭제되지 않은 댓글만 가져오기
         List<Comment> activeComments = study.getComments().stream()
@@ -111,8 +106,7 @@ public class StudyService {
                         comment.getCommentId(),
                         comment.getContent(),
                         comment.getCreateDate(),
-                        comment.getUser().getUserId(),
-                        comment.getParentComment() != null ? comment.getParentComment().getCommentId() : null
+                        comment.getUser().getUserId()
                 ))
                 .collect(Collectors.toList())
         );
