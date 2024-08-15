@@ -118,11 +118,11 @@ public class StudyService {
                     // CommentDepth 조회
                     CommentDepth commentDepth = commentDepthRepository.findFirstByDescendantComment(comment);
 
-                    Long descendantCommentId = null;
+                    Long ancestorCommentId = null;
                     int depth = 0;
 
                     if (commentDepth != null) {
-                        descendantCommentId = commentDepth.getDescendantComment().getCommentId();
+                        ancestorCommentId = commentDepth.getAncestorComment().getCommentId();
                         depth = commentDepth.getDepth();
                     }
 
@@ -131,7 +131,7 @@ public class StudyService {
                             comment.getContent(),
                             comment.getCreateDate(),
                             comment.getUser().getUserId(),
-                            descendantCommentId,
+                            ancestorCommentId,
                             depth
                     );
                 })
