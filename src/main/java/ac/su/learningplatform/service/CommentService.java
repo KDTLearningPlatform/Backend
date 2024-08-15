@@ -2,7 +2,6 @@ package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.constant.DeleteStatus;
 import ac.su.learningplatform.domain.*;
-import ac.su.learningplatform.dto.CommentCreateRequestDTO;
 import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.repository.CommentDepthRepository;
 import ac.su.learningplatform.repository.CommentRepository;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -35,7 +32,7 @@ public class CommentService {
 
     // 댓글 생성
     @Transactional
-    public CommentDTO.Response createComment(Long studyId, CommentCreateRequestDTO commentCreateRequest) {
+    public CommentDTO.Response createComment(Long studyId, CommentDTO.Request commentCreateRequest) {
         if (studyId == null) {
             throw new IllegalArgumentException("studyId는 null일 수 없습니다.");
         }
@@ -92,7 +89,7 @@ public class CommentService {
 
     // 댓글 수정
     @Transactional
-    public CommentDTO.Response updateComment(Long commentId, CommentDTO.Request commentRequest) {
+    public CommentDTO.Response updateComment(Long commentId, CommentDTO.PutRequest commentRequest) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
 
@@ -119,27 +116,25 @@ public class CommentService {
         commentRepository.save(comment);
     }
 
-    // 특정 스터디의 모든 댓글 조회
-    @Transactional(readOnly = true)
-    public List<CommentDTO.Response> getCommentsByStudyId(Long studyId) {
-        List<Comment> comments = commentRepository.findByStudy_StudyIdAndDel(studyId, DeleteStatus.ACTIVE);
-        return comments.stream()
-                .map(comment -> new CommentDTO.Response(
-                        comment.getCommentId(),
-                        comment.getContent(),
-                        comment.getCreateDate(),
-                        comment.getUser().getUserId()
-                ))
-                .collect(Collectors.toList());
-    }
-
     // Comment -> CommentDTO.Response 변환
     private CommentDTO.Response convertToResponse(Comment comment) {
+        CommentDepth commentDepth = commentDepthRepository.findFirstByDescendantComment(comment);
+
+        Long ancestorCommentId = null;
+        int depth = 0;
+
+        if (commentDepth != null) {
+            ancestorCommentId = commentDepth.getAncestorComment().getCommentId();
+            depth = commentDepth.getDepth();
+        }
+
         return new CommentDTO.Response(
                 comment.getCommentId(),
                 comment.getContent(),
                 comment.getCreateDate(),
-                comment.getUser().getUserId()
+                comment.getUser().getUserId(),
+                ancestorCommentId,
+                depth
         );
     }
 

@@ -2,12 +2,15 @@ package ac.su.learningplatform.service;
 
 import ac.su.learningplatform.constant.DeleteStatus;
 import ac.su.learningplatform.domain.Comment;
+import ac.su.learningplatform.domain.CommentDepth;
 import ac.su.learningplatform.domain.Study;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.dto.StudyDetailsDTO;
 import ac.su.learningplatform.dto.StudyListDTO;
 import ac.su.learningplatform.dto.StudyDTO;
+import ac.su.learningplatform.repository.CommentDepthRepository; // 추가된 import
+import ac.su.learningplatform.repository.CommentRepository;
 import ac.su.learningplatform.repository.LoveRepository;
 import ac.su.learningplatform.repository.StudyRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,20 +26,24 @@ public class StudyService {
 
     private final StudyRepository studyRepository;
     private final LoveRepository loveRepository; // 추가
+    private final CommentRepository commentRepository;
+    private final CommentDepthRepository commentDepthRepository; // 추가
 
-    public StudyService(StudyRepository studyRepository, LoveRepository loveRepository) {
+    public StudyService(StudyRepository studyRepository, LoveRepository loveRepository, CommentRepository commentRepository, CommentDepthRepository commentDepthRepository) {
         this.studyRepository = studyRepository;
         this.loveRepository = loveRepository; // 추가
+        this.commentRepository = commentRepository;
+        this.commentDepthRepository = commentDepthRepository; // 추가
     }
 
     // 모든 게시글 조회
-    public List<StudyListDTO> getAllStudies(Long userId) { // userId 추가
+    public List<StudyListDTO> getAllStudies(Long userId) {
         List<Study> studies = studyRepository.findAllByDelOrderByCreateDateDesc(DeleteStatus.ACTIVE);
 
         // 생성일자를 기준으로 내림차순으로 정렬
         return studies.stream()
-                .sorted(Comparator.comparing(Study::getCreateDate).reversed()) // 내림차순 정렬
-                .map(study -> convertToDTO(study, userId)) // userId 추가
+                .sorted(Comparator.comparing(Study::getCreateDate).reversed())
+                .map(study -> convertToDTO(study, userId))
                 .collect(Collectors.toList());
     }
 
@@ -70,16 +77,21 @@ public class StudyService {
     }
 
     // Study -> StudyListDTO 변환
-    private StudyListDTO convertToDTO(Study study, Long userId) { // userId 추가
-        boolean liked = loveRepository.existsByUser_UserIdAndStudy_StudyId(userId, study.getStudyId()); // 좋아요 여부 체크
+    private StudyListDTO convertToDTO(Study study, Long userId) {
+        boolean liked = loveRepository.existsByUser_UserIdAndStudy_StudyId(userId, study.getStudyId());
+
+        // 댓글 수 세기
+        List<Comment> comments = commentRepository.findByStudy_StudyIdAndDel(study.getStudyId(), DeleteStatus.ACTIVE);
+        int activeCommentCount = comments.size(); // 댓글 수
+
         return new StudyListDTO(
                 study.getStudyId(),
                 study.getTitle(),
                 study.getField(),
-                study.getComments().size(),
+                activeCommentCount, // active 댓글 수
                 study.getCreateDate(),
                 study.getUser().getUserId(),
-                liked // 좋아요 여부 추가
+                liked
         );
     }
 
@@ -102,12 +114,27 @@ public class StudyService {
         // 댓글 목록을 createDate 에 따라 내림차순 정렬 후 반환
         studyDTO.setComments(activeComments.stream()
                 .sorted(Comparator.comparing(Comment::getCreateDate).reversed()) // createDate로 내림차순 정렬
-                .map(comment -> new CommentDTO.Response(
-                        comment.getCommentId(),
-                        comment.getContent(),
-                        comment.getCreateDate(),
-                        comment.getUser().getUserId()
-                ))
+                .map(comment -> {
+                    // CommentDepth 조회
+                    CommentDepth commentDepth = commentDepthRepository.findFirstByDescendantComment(comment);
+
+                    Long descendantCommentId = null;
+                    int depth = 0;
+
+                    if (commentDepth != null) {
+                        descendantCommentId = commentDepth.getDescendantComment().getCommentId();
+                        depth = commentDepth.getDepth();
+                    }
+
+                    return new CommentDTO.Response(
+                            comment.getCommentId(),
+                            comment.getContent(),
+                            comment.getCreateDate(),
+                            comment.getUser().getUserId(),
+                            descendantCommentId,
+                            depth
+                    );
+                })
                 .collect(Collectors.toList())
         );
 

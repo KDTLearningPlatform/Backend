@@ -11,12 +11,13 @@ public class CommentDTO {
 
     @Getter
     @Setter
-    @AllArgsConstructor
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class Request {
-        private String content;
         private Long userId;
-        private Long studyId; // 스터디 ID 추가
+        private Long studyId;
+        private String content;
+        private Long parentId;
     }
 
     @Getter
@@ -28,5 +29,17 @@ public class CommentDTO {
         private String content;
         private LocalDateTime createDate;
         private Long userId;
+        private Long ancestorCommentId; // 조상 댓글 ID
+        private int depth; // 댓글 깊이
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PutRequest {
+        private String content;
+        private Long userId;
+        private Long studyId;
     }
 }

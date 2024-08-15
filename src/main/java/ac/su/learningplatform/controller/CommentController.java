@@ -1,7 +1,6 @@
 package ac.su.learningplatform.controller;
 
 import ac.su.learningplatform.domain.User;
-import ac.su.learningplatform.dto.CommentCreateRequestDTO;
 import ac.su.learningplatform.dto.CommentDTO;
 import ac.su.learningplatform.exception.UnauthorizedException;
 import ac.su.learningplatform.service.CommentService;
@@ -11,8 +10,6 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -33,7 +30,7 @@ public class CommentController {
     @PostMapping
     public ResponseEntity<CommentDTO.Response> createComment(
             @RequestParam Long studyId,
-            @RequestBody CommentCreateRequestDTO commentCreateRequest,
+            @RequestBody CommentDTO.Request commentCreateRequest,
             HttpSession session) {
 
         Long userId = authenticateUser(session); // 사용자 인증
@@ -47,7 +44,7 @@ public class CommentController {
     @PutMapping("/{commentId}")
     public ResponseEntity<CommentDTO.Response> updateComment(
             @PathVariable Long commentId,
-            @RequestBody CommentDTO.Request commentRequest,
+            @RequestBody CommentDTO.PutRequest commentRequest,
             HttpSession session) {
 
         Long userId = authenticateUser(session); // 사용자 인증
@@ -67,13 +64,6 @@ public class CommentController {
 
         commentService.deleteComment(commentId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    // 특정 스터디 게시글의 댓글만 불러오는 API 추가
-    @GetMapping("/study/{studyId}")
-    public ResponseEntity<List<CommentDTO.Response>> getCommentsByStudyId(@PathVariable Long studyId) {
-        List<CommentDTO.Response> comments = commentService.getCommentsByStudyId(studyId);
-        return new ResponseEntity<>(comments, HttpStatus.OK);
     }
 
     private Long authenticateUser(HttpSession session) {
