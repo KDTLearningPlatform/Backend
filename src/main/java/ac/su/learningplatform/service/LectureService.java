@@ -297,6 +297,11 @@ public class LectureService {
             );
         }).collect(Collectors.toList());
 
-        return new MyLectureDetailsDTO(lectureTitle, videoDTOs);
+        // 강의의 전체 진행도 계산
+        int completedVideos = (int) videoDTOs.stream().filter(v -> v.getProgress() == 1.0f).count();
+        float lectureProgress = (float) completedVideos / videos.size();
+
+        return new MyLectureDetailsDTO(lectureTitle, lectureProgress, videoDTOs);
     }
+
 }

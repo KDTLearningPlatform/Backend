@@ -13,8 +13,10 @@ import java.util.List;
 @AllArgsConstructor
 public class MyLectureDetailsDTO {
     private String lectureTitle;
+    private float lectureProgress;
     private List<VideoProgressDTO> videos;
 
+    // 기존 VideoProgressDTO 클래스
     @Getter
     @Setter
     @NoArgsConstructor
@@ -26,3 +28,4 @@ public class MyLectureDetailsDTO {
         private float progress;
     }
 }
+
