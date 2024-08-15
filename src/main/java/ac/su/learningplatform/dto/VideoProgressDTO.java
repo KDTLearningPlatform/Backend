@@ -1,14 +1,21 @@
 package ac.su.learningplatform.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
 public class VideoProgressDTO {
-    private Long userId;
-    private Long lectureId;
-    private Long videoId;
-    private String title;
-    private int watchTime;
-    private float progress;
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Response {
+        private Long videoId;
+        private int videoOrder;
+        private String title;
+        private String content;
+        private int runningTime;
+        private int lastPlaybackPosition;
+    }
 }
