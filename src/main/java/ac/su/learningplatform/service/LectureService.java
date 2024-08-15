@@ -6,15 +6,19 @@ import ac.su.learningplatform.domain.Video;
 import ac.su.learningplatform.dto.*;
 import ac.su.learningplatform.repository.LectureRepository;
 import ac.su.learningplatform.repository.UserRepository;
+import ac.su.learningplatform.repository.UserVideoProgressRepository;
 import ac.su.learningplatform.repository.VideoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ac.su.learningplatform.domain.UserVideoProgress;
+import ac.su.learningplatform.domain.UserVideoProgressId;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,13 +28,15 @@ public class LectureService {
     private final LectureRepository lectureRepository;
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
+    private final UserVideoProgressRepository userVideoProgressRepository;
     private final S3Service s3Service;
 
-    public LectureService(LectureRepository lectureRepository, VideoRepository videoRepository, UserRepository userRepository, S3Service s3Service) {
+    public LectureService(LectureRepository lectureRepository, VideoRepository videoRepository, UserRepository userRepository, S3Service s3Service, UserVideoProgressRepository userVideoProgressRepository) {
         this.lectureRepository = lectureRepository;
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.s3Service = s3Service;
+        this.userVideoProgressRepository = userVideoProgressRepository;
     }
 
     // 모든 강의 목록 조회
@@ -270,4 +276,27 @@ public class LectureService {
         return lecture.getUser().getUserId().equals(userId);
     }
 
+    // 내 강의 details
+    public MyLectureDetailsDTO getMyLectureDetails(Long lectureId, Long userId) {
+        String lectureTitle = lectureRepository.findById(lectureId)
+                .map(Lecture::getTitle)
+                .orElseThrow(() -> new IllegalArgumentException("Lecture not found"));
+
+        // 삭제되지 않은 비디오만 가져옴
+        List<Video> videos = videoRepository.findByLecture_LectureIdAndDeleteDateIsNull(lectureId);
+
+        List<MyLectureDetailsDTO.VideoProgressDTO> videoDTOs = videos.stream().map(video -> {
+            Optional<UserVideoProgress> progressOpt = userVideoProgressRepository.findById(new UserVideoProgressId(userId, video.getVideoId()));
+            float progress = progressOpt.map(UserVideoProgress::getProgress).orElse(0f);
+
+            return new MyLectureDetailsDTO.VideoProgressDTO(
+                    video.getVideoId(),
+                    video.getTitle(),
+                    video.getRunningTime(),
+                    progress
+            );
+        }).collect(Collectors.toList());
+
+        return new MyLectureDetailsDTO(lectureTitle, videoDTOs);
+    }
 }

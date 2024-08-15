@@ -1,5 +1,6 @@
 package ac.su.learningplatform.controller;
 
+import ac.su.learningplatform.dto.MyLectureDetailsDTO;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.dto.LectureDetailsDTO;
 import ac.su.learningplatform.dto.LectureListDTO;
@@ -155,6 +156,12 @@ public class LectureController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @GetMapping("/my-details/{lectureId}")
+    public ResponseEntity<MyLectureDetailsDTO> getMyLectureDetails(@PathVariable Long lectureId, HttpSession session) {
+        Long userId = authenticateUser(session);
+        MyLectureDetailsDTO lectureDetails = lectureService.getMyLectureDetails(lectureId, userId);
+        return ResponseEntity.ok(lectureDetails);
+    }
     private Long authenticateUser(HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
 
@@ -174,5 +181,4 @@ public class LectureController {
             throw new UnauthorizedException("수정 권한이 없습니다");
         }
     }
-
 }
