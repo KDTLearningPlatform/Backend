@@ -18,5 +18,6 @@ public class StudyDetailsDTO {
     private String field;
     private LocalDateTime createDate;
     private Long userId;
+    private boolean liked; // 좋아요 여부 추가
     private List<CommentDTO.Response> comments;
 }
