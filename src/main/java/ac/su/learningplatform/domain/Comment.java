@@ -13,13 +13,13 @@ import java.util.List;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_Id") // 댓글 ID, comment_id->Id
+    @Column(name = "comment_id") // 댓글 ID, comment_id->Id
     private Long commentId;
 
     @Column(name = "content", nullable = false) // 내용
     private String content;
 
-    @Column(name = "create_Date", nullable = false) // 작성일자
+    @Column(name = "create_date", nullable = false) // 작성일자
     private LocalDateTime createDate = LocalDateTime.now(); // 기본값은 현재시간
 
     @Column(name = "delete_date") // 삭제일자
@@ -38,10 +38,4 @@ public class Comment {
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
 
-    @ManyToOne
-    @JoinColumn(name = "parent_comment_id")
-    private Comment parentComment;
-
-    @OneToMany(mappedBy = "parentComment")
-    private List<Comment> childComments;
 }
