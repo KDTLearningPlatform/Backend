@@ -11,4 +11,5 @@ import java.util.List;
 public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findByLecture(Lecture lecture);
     List<Video> findByLecture_LectureId(Long lectureId);
+    List<Video> findByLectureAndDeleteDateIsNull(Lecture lecture);
 }

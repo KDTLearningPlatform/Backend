@@ -7,6 +7,9 @@ import ac.su.learningplatform.repository.UserLectureProgressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ac.su.learningplatform.repository.VideoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,10 +17,12 @@ import java.util.stream.Collectors;
 public class UserLectureProgressService {
 
     private final UserLectureProgressRepository userLectureProgressRepository;
+    private final VideoRepository videoRepository;
 
     @Autowired
-    public UserLectureProgressService(UserLectureProgressRepository userLectureProgressRepository) {
+    public UserLectureProgressService(UserLectureProgressRepository userLectureProgressRepository, VideoRepository videoRepository) {
         this.userLectureProgressRepository = userLectureProgressRepository;
+        this.videoRepository = videoRepository;
     }
 
     public UserLectureProgress registerLecture(UserLectureRegisterDTO dto) {
@@ -69,16 +74,24 @@ public class UserLectureProgressService {
     private UserLectureDTO convertToDTO(UserLectureProgress userLectureProgress) {
         Lecture lecture = userLectureProgress.getLecture();
 
+        // 삭제되지 않은 비디오만 필터링
+        List<Video> activeVideos = videoRepository.findByLectureAndDeleteDateIsNull(lecture);
+
         // 비디오들의 총 러닝타임 계산
-        int totalRunningTime = lecture.getVideos().stream()
+        int totalRunningTime = activeVideos.stream()
                 .mapToInt(Video::getRunningTime)
                 .sum();
+
+        int totalVideoCount = activeVideos.size();
+        int watchedCount = userLectureProgress.getWatchedCount();
 
         return new UserLectureDTO(
                 lecture.getLectureId(),
                 lecture.getTag(),
                 lecture.getTitle(),
-                totalRunningTime
+                totalRunningTime,
+                watchedCount,
+                totalVideoCount
         );
     }
 }
