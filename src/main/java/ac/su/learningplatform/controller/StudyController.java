@@ -12,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/api/studies")
@@ -42,11 +44,16 @@ public class StudyController {
 
     // 스터디 세부 정보
     @GetMapping("/{studyId}")
-    public ResponseEntity<StudyDetailsDTO> getStudyInfo(@PathVariable Long studyId, HttpSession session) {
-
+    public ResponseEntity<Map<String, Object>> getStudyInfo(@PathVariable Long studyId, HttpSession session) {
         Long userId = authenticateUser(session); // 사용자 인증
         StudyDetailsDTO studyDTO = studyService.getStudyDetailsById(studyId, userId);
-        return new ResponseEntity<>(studyDTO, HttpStatus.OK);
+
+        // 데이터를 Map에 담기
+        Map<String, Object> response = new HashMap<>();
+        response.put("studyDetails", studyDTO);
+        response.put("currentUserId", userId);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping
@@ -104,6 +111,5 @@ public class StudyController {
             throw new UnauthorizedException("수정 권한이 없습니다");
         }
     }
-
 
 }
