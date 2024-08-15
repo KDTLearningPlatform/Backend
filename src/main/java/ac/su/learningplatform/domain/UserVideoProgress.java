@@ -26,24 +26,4 @@ public class UserVideoProgress {
 
     @Column(name="progress", nullable = false)  // 진행도 퍼센트 0~1
     private float progress = 0;
-
-    public UserVideoProgress(Long userId, Long videoId) {
-        this.id = new UserVideoProgressId(userId, videoId);
-        this.user = new User();
-        this.video = new Video();
-        this.lastPlaybackPosition = 0;
-        this.progress = 0;
-    }
-
-    public UserVideoProgress() {
-
-    }
-
-    public void setWatchTime(int watchTime) {
-        this.lastPlaybackPosition = watchTime;
-    }
-
-    public int getWatchTime() {
-        return lastPlaybackPosition;
-    }
 }
