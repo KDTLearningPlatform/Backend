@@ -1,10 +1,8 @@
 package ac.su.learningplatform.service;
 
-import ac.su.learningplatform.domain.User;
-import ac.su.learningplatform.domain.UserVideoProgress;
-import ac.su.learningplatform.domain.UserVideoProgressId;
-import ac.su.learningplatform.domain.Video;
+import ac.su.learningplatform.domain.*;
 import ac.su.learningplatform.dto.VideoProgressDTO.Response;
+import ac.su.learningplatform.repository.UserLectureProgressRepository;
 import ac.su.learningplatform.repository.UserRepository;
 import ac.su.learningplatform.repository.UserVideoProgressRepository;
 import ac.su.learningplatform.repository.VideoRepository;
@@ -18,12 +16,14 @@ public class UserVideoProgressService {
 
     private final VideoRepository videoRepository;
     private final UserVideoProgressRepository userVideoProgressRepository;
+    private final UserLectureProgressRepository userLectureProgressRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public UserVideoProgressService(VideoRepository videoRepository, UserVideoProgressRepository userVideoProgressRepository, UserRepository userRepository) {
+    public UserVideoProgressService(VideoRepository videoRepository, UserVideoProgressRepository userVideoProgressRepository, UserLectureProgressRepository userLectureProgressRepository, UserRepository userRepository) {
         this.videoRepository = videoRepository;
         this.userVideoProgressRepository = userVideoProgressRepository;
+        this.userLectureProgressRepository = userLectureProgressRepository;
         this.userRepository = userRepository;
     }
 
@@ -54,14 +54,17 @@ public class UserVideoProgressService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new IllegalArgumentException("Video not found"));
+        Lecture lecture = video.getLecture();
 
         UserVideoProgressId id = new UserVideoProgressId(userId, videoId);
         Optional<UserVideoProgress> userVideoProgressOpt = userVideoProgressRepository.findById(id);
 
         float progress = (float) lastPlaybackPosition / video.getRunningTime();
 
+        UserVideoProgress userVideoProgress;
+
         if (userVideoProgressOpt.isPresent()) {
-            UserVideoProgress userVideoProgress = userVideoProgressOpt.get();
+            userVideoProgress = userVideoProgressOpt.get();
 
             // 진행도가 1(100%)이면 업데이트하지 않음
             if (userVideoProgress.getProgress() < 1.0f) {
@@ -70,14 +73,38 @@ public class UserVideoProgressService {
                 userVideoProgressRepository.save(userVideoProgress);
             }
         } else {
-            UserVideoProgress userVideoProgress = new UserVideoProgress();
+            userVideoProgress = new UserVideoProgress();
             userVideoProgress.setId(id);
             userVideoProgress.setUser(user);
             userVideoProgress.setVideo(video);
             userVideoProgress.setLastPlaybackPosition(lastPlaybackPosition);
             userVideoProgress.setProgress(progress);
-
             userVideoProgressRepository.save(userVideoProgress);
         }
+
+        // 강의 진행도 업데이트
+        if (progress == 1.0f) {
+            updateUserLectureProgress(user, lecture);
+        }
+    }
+
+    private void updateUserLectureProgress(User user, Lecture lecture) {
+        UserLectureProgressId id = new UserLectureProgressId(user.getUserId(), lecture.getLectureId());
+        UserLectureProgress userLectureProgress = userLectureProgressRepository.findById(id)
+                .orElse(new UserLectureProgress());
+        userLectureProgress.setId(id);
+        userLectureProgress.setUser(user);
+        userLectureProgress.setLecture(lecture);
+
+        // 시청 완료된 비디오 수를 계산
+        int watchedCount = userVideoProgressRepository.countByUserAndVideo_LectureAndProgress(user, lecture, 1.0f);
+        int totalVideos = videoRepository.countByLectureAndDeleteDateIsNull(lecture);
+
+        // 진행도를 계산하여 업데이트
+        float lectureProgress = (float) watchedCount / totalVideos;
+        userLectureProgress.setWatchedCount(watchedCount);
+        userLectureProgress.setProgress(lectureProgress);
+
+        userLectureProgressRepository.save(userLectureProgress);
     }
 }
