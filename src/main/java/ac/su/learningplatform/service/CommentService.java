@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CommentService {
@@ -107,13 +109,35 @@ public class CommentService {
     // 댓글 삭제
     @Transactional
     public void deleteComment(Long commentId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
+        // 댓글의 depth 조회
+        Optional<CommentDepth> commentDepth = commentDepthRepository.findFirstByDescendantComment_CommentId(commentId);
 
-        comment.setDel(DeleteStatus.DELETED);
-        comment.setDeleteDate(LocalDateTime.now());
+        int depth = commentDepth.get().getDepth();
 
-        commentRepository.save(comment);
+        if (depth == 0) {
+            // 삭제할 댓글의 ID로 모든 관련 댓글의 descendantId를 조회
+            List<Long> descendantIdsToDelete = commentDepthRepository.findDescendantIdsByAncestorComment_CommentId(commentId);
+
+            // descendantId를 기반으로 댓글을 조회하여 삭제
+            List<Comment> commentsToDelete = commentRepository.findAllById(descendantIdsToDelete);
+
+            // 댓글과 관련된 모든 댓글을 삭제
+            commentsToDelete.forEach(comment -> {
+                comment.setDel(DeleteStatus.DELETED);
+                comment.setDeleteDate(LocalDateTime.now());
+            });
+
+            commentRepository.saveAll(commentsToDelete);
+        } else {
+            // 단일 댓글 삭제
+            Comment comment = commentRepository.findById(commentId)
+                    .orElseThrow(() -> new EntityNotFoundException("해당 ID의 댓글을 찾을 수 없습니다: " + commentId));
+
+            comment.setDel(DeleteStatus.DELETED);
+            comment.setDeleteDate(LocalDateTime.now());
+
+            commentRepository.save(comment);
+        }
     }
 
     // Comment -> CommentDTO.Response 변환
