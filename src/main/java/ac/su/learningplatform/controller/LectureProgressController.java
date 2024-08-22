@@ -66,6 +66,14 @@ public class LectureProgressController {
         return ResponseEntity.ok(lectures);
     }
 
+    // 강의 완료 여부 확인 API 추가
+    @GetMapping("/check-complete/{lectureId}")
+    public ResponseEntity<Boolean> checkLectureComplete(@PathVariable Long lectureId, HttpSession session) {
+        Long userId = authenticateUser(session);
+        boolean isComplete = userLectureProgressService.isLectureComplete(userId, lectureId);
+        return ResponseEntity.ok(isComplete);
+    }
+
     private Long authenticateUser(HttpSession session) {
         String token = (String) session.getAttribute("jwtToken");
 

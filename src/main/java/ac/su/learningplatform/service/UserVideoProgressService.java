@@ -62,16 +62,18 @@ public class UserVideoProgressService {
         float progress = (float) lastPlaybackPosition / video.getRunningTime();
 
         UserVideoProgress userVideoProgress;
+        boolean isFirstCompletion = false;
 
         if (userVideoProgressOpt.isPresent()) {
             userVideoProgress = userVideoProgressOpt.get();
 
             // 진행도가 1(100%)이면 업데이트하지 않음
-            if (userVideoProgress.getProgress() < 1.0f) {
-                userVideoProgress.setLastPlaybackPosition(lastPlaybackPosition);
-                userVideoProgress.setProgress(progress);
-                userVideoProgressRepository.save(userVideoProgress);
+            if (userVideoProgress.getProgress() < 1.0f && progress == 1.0f) {
+                isFirstCompletion = true;
             }
+            userVideoProgress.setLastPlaybackPosition(lastPlaybackPosition);
+            userVideoProgress.setProgress(progress);
+            userVideoProgressRepository.save(userVideoProgress);
         } else {
             userVideoProgress = new UserVideoProgress();
             userVideoProgress.setId(id);
@@ -80,15 +82,36 @@ public class UserVideoProgressService {
             userVideoProgress.setLastPlaybackPosition(lastPlaybackPosition);
             userVideoProgress.setProgress(progress);
             userVideoProgressRepository.save(userVideoProgress);
+
+            if (progress == 1.0f) {
+                isFirstCompletion = true;
+            }
+        }
+
+        // 최초로 비디오를 완료한 경우에만 카운트 증가
+        if (isFirstCompletion) {
+            incrementDailyVidCntAndTotalPoints(user, video.getRunningTime() * 10);
         }
 
         // 강의 진행도 업데이트
         if (progress == 1.0f) {
-            updateUserLectureProgress(user, lecture);
+            updateUserLectureProgress(user, lecture, isFirstCompletion);
         }
     }
 
-    private void updateUserLectureProgress(User user, Lecture lecture) {
+    private void incrementDailyVidCntAndTotalPoints(User user, int pointsToAdd) {
+        user.setDailyVidCnt(user.getDailyVidCnt() + 1);
+        user.setTotalPoint(user.getTotalPoint() + pointsToAdd);
+        userRepository.save(user);
+    }
+
+    private void incrementTotalPoints(User user, int pointsToAdd) {
+        user.setTotalPoint(user.getTotalPoint() + pointsToAdd);
+        userRepository.save(user);
+    }
+
+
+    private void updateUserLectureProgress(User user, Lecture lecture, boolean isVideoCompletion) {
         UserLectureProgressId id = new UserLectureProgressId(user.getUserId(), lecture.getLectureId());
         UserLectureProgress userLectureProgress = userLectureProgressRepository.findById(id)
                 .orElse(new UserLectureProgress());
@@ -104,6 +127,11 @@ public class UserVideoProgressService {
         float lectureProgress = (float) watchedCount / totalVideos;
         userLectureProgress.setWatchedCount(watchedCount);
         userLectureProgress.setProgress(lectureProgress);
+
+        // 강의가 완료된 경우 포인트 추가
+        if (lectureProgress == 1.0f && isVideoCompletion) {
+            incrementTotalPoints(user, totalVideos * 10);
+        }
 
         userLectureProgressRepository.save(userLectureProgress);
     }
