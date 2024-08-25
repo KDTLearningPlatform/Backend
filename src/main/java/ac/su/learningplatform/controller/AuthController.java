@@ -168,6 +168,7 @@ public class AuthController {
         response.put("goalVidCnt", user.getGoalVidCnt());
         response.put("nickname", user.getNickname());
         response.put("profileImage", user.getProfileImage());
+        response.put("point", user.getTotalPoint());
 
         return ResponseEntity.ok(response);
     }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import ac.su.learningplatform.repository.VideoRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -124,5 +125,10 @@ public class UserLectureProgressService {
                 watchedCount,
                 totalVideoCount
         );
+    }
+
+    public boolean isLectureComplete(Long userId, Long lectureId) {
+        Optional<UserLectureProgress> progressOpt = userLectureProgressRepository.findById(new UserLectureProgressId(userId, lectureId));
+        return progressOpt.map(UserLectureProgress::getProgress).orElse(0f) == 1.0f;
     }
 }
