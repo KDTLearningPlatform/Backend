@@ -3,6 +3,7 @@ package ac.su.learningplatform.controller;
 import ac.su.learningplatform.domain.User;
 import ac.su.learningplatform.constant.Role;
 import ac.su.learningplatform.service.JwtService;
+import ac.su.learningplatform.service.UserRankingService;
 import ac.su.learningplatform.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +35,9 @@ public class AuthController {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private UserRankingService userRankingService;
 
     @PostMapping("/chooseSocialLogin")
     public ResponseEntity<Map<String, String>> chooseSocialLogin(@RequestParam("provider") String provider) {
@@ -77,6 +81,7 @@ public class AuthController {
             if (existingUser != null) {
                 String jwtToken = jwtService.generateToken(existingUser.getEmail());
                 session.setAttribute("jwtToken", jwtToken);
+                userRankingService.updateRankingCache();
                 return new RedirectView("http://localhost:3000/main");
             }
             session.setAttribute("oauth2User", oAuth2User);
@@ -126,6 +131,8 @@ public class AuthController {
             User savedUser = userService.signup(user);
             String jwtToken = jwtService.generateToken(email);
             session.setAttribute("jwtToken", jwtToken);
+
+            userRankingService.updateRankingCache();
 
             return ResponseEntity.ok(Map.of("status", "ok"));
         } catch (Exception e) {

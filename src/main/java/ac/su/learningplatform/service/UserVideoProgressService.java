@@ -7,24 +7,30 @@ import ac.su.learningplatform.repository.UserRepository;
 import ac.su.learningplatform.repository.UserVideoProgressRepository;
 import ac.su.learningplatform.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 public class UserVideoProgressService {
-
     private final VideoRepository videoRepository;
     private final UserVideoProgressRepository userVideoProgressRepository;
     private final UserLectureProgressRepository userLectureProgressRepository;
     private final UserRepository userRepository;
+    private final UserRankingService userRankingService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private static final String RANKING_CACHE_KEY = "userRankingCache";
 
     @Autowired
-    public UserVideoProgressService(VideoRepository videoRepository, UserVideoProgressRepository userVideoProgressRepository, UserLectureProgressRepository userLectureProgressRepository, UserRepository userRepository) {
+    public UserVideoProgressService(VideoRepository videoRepository, UserVideoProgressRepository userVideoProgressRepository, UserLectureProgressRepository userLectureProgressRepository, UserRepository userRepository, UserRankingService userRankingService, RedisTemplate<String, Object> redisTemplate) {
         this.videoRepository = videoRepository;
         this.userVideoProgressRepository = userVideoProgressRepository;
         this.userLectureProgressRepository = userLectureProgressRepository;
         this.userRepository = userRepository;
+        this.userRankingService = userRankingService;
+        this.redisTemplate = redisTemplate;
     }
 
     public Optional<Response> getVideoById(Long videoId, Long userId) {
@@ -102,14 +108,28 @@ public class UserVideoProgressService {
     private void incrementDailyVidCntAndTotalPoints(User user, int pointsToAdd) {
         user.setDailyVidCnt(user.getDailyVidCnt() + 1);
         user.setTotalPoint(user.getTotalPoint() + pointsToAdd);
+        user.setUpdateDate(LocalDateTime.now());
+
         userRepository.save(user);
+
+        updateRankingCache();
     }
 
     private void incrementTotalPoints(User user, int pointsToAdd) {
         user.setTotalPoint(user.getTotalPoint() + pointsToAdd);
+        user.setUpdateDate(LocalDateTime.now());
         userRepository.save(user);
+
+        updateRankingCache();
     }
 
+    private void updateRankingCache() {
+        // 기존 캐시 무효화
+        redisTemplate.delete(RANKING_CACHE_KEY);
+
+        // 새로운 데이터를 캐시 갱신
+        userRankingService.fetchAndCacheUserRanking();
+    }
 
     private void updateUserLectureProgress(User user, Lecture lecture, boolean isVideoCompletion) {
         UserLectureProgressId id = new UserLectureProgressId(user.getUserId(), lecture.getLectureId());
