@@ -61,6 +61,10 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // firebase
+    implementation 'com.google.firebase:firebase-admin:9.3.0' // Firebase Admin SDK
+
 }
 
 tasks.named('test') {

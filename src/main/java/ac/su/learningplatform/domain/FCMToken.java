@@ -16,9 +16,9 @@ public class FCMToken {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-//    @ManyToOne
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
 
 /*

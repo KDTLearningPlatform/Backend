@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FCMRepository extends JpaRepository<FCMToken, Long> {
+public interface FCMTokenRepository extends JpaRepository<FCMToken, Long> {
     FCMToken findByFcmToken(String token);
 }
